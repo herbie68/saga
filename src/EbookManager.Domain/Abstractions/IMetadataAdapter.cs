@@ -1,5 +1,5 @@
 using EbookManager.Domain.Books;
-using EbookManager.Domain.Importing;
+using EbookManager.Domain.Metadata;
 
 namespace EbookManager.Domain.Abstractions;
 

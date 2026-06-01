@@ -1,5 +1,3 @@
-using EbookManager.Domain.Books;
-
 namespace EbookManager.Domain.Importing;
 
 public enum ImportOutcome
@@ -17,7 +15,3 @@ public sealed record ImportItemResult(
     Guid? BookId = null);
 
 public sealed record ImportBatchResult(IReadOnlyList<ImportItemResult> Items);
-
-public sealed record MetadataReadResult(BookMetadata Metadata, string? Warning = null);
-
-public sealed record MetadataWriteResult(MetadataWriteBackStatus Status, string? Message = null);

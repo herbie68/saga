@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace EbookManager.Domain.Books;
 
 public enum ReadingStatus
@@ -30,23 +32,45 @@ public enum EbookFormat
 
 public static class EbookFormatExtensions
 {
-    public static readonly IReadOnlySet<EbookFormat> Supported = Enum.GetValues<EbookFormat>().ToHashSet();
+    private static readonly FrozenDictionary<string, EbookFormat> FormatsByExtension =
+        new Dictionary<string, EbookFormat>(StringComparer.OrdinalIgnoreCase)
+        {
+            [".epub"] = EbookFormat.Epub,
+            [".kepub.epub"] = EbookFormat.Kepub,
+            [".pdf"] = EbookFormat.Pdf,
+            [".cbr"] = EbookFormat.Cbr,
+            [".cbz"] = EbookFormat.Cbz,
+            [".mobi"] = EbookFormat.Mobi,
+            [".azw"] = EbookFormat.Azw,
+            [".azw3"] = EbookFormat.Azw3,
+            [".kfx"] = EbookFormat.Kfx
+        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly FrozenDictionary<EbookFormat, string> ExtensionsByFormat =
+        FormatsByExtension.ToFrozenDictionary(pair => pair.Value, pair => pair.Key);
+
+    public static FrozenSet<EbookFormat> Supported { get; } =
+        ExtensionsByFormat.Keys.ToFrozenSet();
 
     public static bool TryFromFilename(string path, out EbookFormat format)
     {
-        var name = Path.GetFileName(path).ToLowerInvariant();
-        if (name.EndsWith(".kepub.epub", StringComparison.Ordinal))
+        var name = Path.GetFileName(path);
+        if (name.EndsWith(".kepub.epub", StringComparison.OrdinalIgnoreCase))
         {
             format = EbookFormat.Kepub;
             return true;
         }
 
-        return Enum.TryParse(Path.GetExtension(name).TrimStart('.'), true, out format);
+        return FormatsByExtension.TryGetValue(Path.GetExtension(name), out format);
     }
 
-    public static string ToExtension(this EbookFormat format) => format switch
+    public static string ToExtension(this EbookFormat format)
     {
-        EbookFormat.Kepub => ".kepub.epub",
-        _ => $".{format.ToString().ToLowerInvariant()}"
-    };
+        if (ExtensionsByFormat.TryGetValue(format, out var extension))
+        {
+            return extension;
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(format), format, "Unknown ebook format.");
+    }
 }
