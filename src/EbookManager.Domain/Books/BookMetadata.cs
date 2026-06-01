@@ -2,6 +2,8 @@ namespace EbookManager.Domain.Books;
 
 public sealed record BookMetadata
 {
+    private readonly byte[]? _coverBytes;
+
     public BookMetadata(
         string Title,
         IReadOnlyList<string> Authors,
@@ -25,7 +27,7 @@ public sealed record BookMetadata
         this.Series = Series;
         this.SeriesNumber = SeriesNumber;
         this.Isbn = Isbn;
-        this.CoverBytes = CoverBytes is null ? null : Array.AsReadOnly(CoverBytes.ToArray());
+        _coverBytes = CoverBytes?.ToArray();
     }
 
     public string Title { get; }
@@ -38,7 +40,7 @@ public sealed record BookMetadata
     public string? Series { get; }
     public decimal? SeriesNumber { get; }
     public string? Isbn { get; }
-    public IReadOnlyList<byte>? CoverBytes { get; }
+    public byte[]? CoverBytes => _coverBytes?.ToArray();
 
     public bool Equals(BookMetadata? other) =>
         other is not null &&
@@ -52,7 +54,7 @@ public sealed record BookMetadata
         Series == other.Series &&
         SeriesNumber == other.SeriesNumber &&
         Isbn == other.Isbn &&
-        NullableSequenceEqual(CoverBytes, other.CoverBytes);
+        NullableSequenceEqual(_coverBytes, other._coverBytes);
 
     public override int GetHashCode()
     {
@@ -67,7 +69,7 @@ public sealed record BookMetadata
         hash.Add(Series);
         hash.Add(SeriesNumber);
         hash.Add(Isbn);
-        AddNullableSequence(ref hash, CoverBytes);
+        AddNullableSequence(ref hash, _coverBytes);
         return hash.ToHashCode();
     }
 

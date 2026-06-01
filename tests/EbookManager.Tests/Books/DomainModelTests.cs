@@ -75,6 +75,17 @@ public sealed class DomainModelTests
     }
 
     [Fact]
+    public void Metadata_returns_a_cover_byte_copy_from_the_public_array_contract()
+    {
+        var metadata = new BookMetadata("Title", ["Author"], CoverBytes: [1, 2, 3]);
+
+        byte[]? exposedCoverBytes = metadata.CoverBytes;
+        exposedCoverBytes![0] = 9;
+
+        metadata.CoverBytes.Should().Equal(1, 2, 3);
+    }
+
+    [Fact]
     public void Metadata_with_equivalent_content_compares_equal()
     {
         var first = new BookMetadata(
