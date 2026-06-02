@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using EbookManager.Domain.Abstractions;
 using EbookManager.Domain.Libraries;
@@ -11,6 +12,8 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore
     {
         WriteIndented = true
     };
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> CommitLocks = new(
+        OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
     private readonly string baseDirectory;
 
@@ -41,14 +44,25 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore
         T defaultValue,
         CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var path = Path.Combine(baseDirectory, filename);
+        cancellationToken.ThrowIfCancellationRequested();
         if (!File.Exists(path))
         {
             return defaultValue;
         }
 
-        await using var stream = File.OpenRead(path);
-        return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, cancellationToken) ?? defaultValue;
+        try
+        {
+            await using var stream = File.OpenRead(path);
+            return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, cancellationToken) ?? defaultValue;
+        }
+        catch (JsonException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Quarantine(path);
+            return defaultValue;
+        }
     }
 
     private async Task WriteAsync<T>(
@@ -56,16 +70,46 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore
         T value,
         CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         Directory.CreateDirectory(baseDirectory);
 
         var path = Path.Combine(baseDirectory, filename);
-        var temporaryPath = $"{path}.tmp";
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
 
-        await using (var stream = File.Create(temporaryPath))
+        try
         {
-            await JsonSerializer.SerializeAsync(stream, value, JsonOptions, cancellationToken);
-        }
+            cancellationToken.ThrowIfCancellationRequested();
+            await using (var stream = File.Create(temporaryPath))
+            {
+                await JsonSerializer.SerializeAsync(stream, value, JsonOptions, cancellationToken);
+            }
 
-        File.Move(temporaryPath, path, overwrite: true);
+            var commitLock = CommitLocks.GetOrAdd(Path.GetFullPath(path), _ => new SemaphoreSlim(1, 1));
+            await commitLock.WaitAsync(cancellationToken);
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                File.Move(temporaryPath, path, overwrite: true);
+            }
+            finally
+            {
+                commitLock.Release();
+            }
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
+    }
+
+    private static void Quarantine(string path)
+    {
+        if (File.Exists(path))
+        {
+            File.Move(path, $"{path}.{Guid.NewGuid():N}.corrupt");
+        }
     }
 }

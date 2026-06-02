@@ -49,5 +49,46 @@ public sealed class LibraryServiceTests : IDisposable
         library.Name.Should().Be("Existing");
     }
 
+    [Fact]
+    public async Task Open_canonicalizes_trailing_separator_before_remembering_library()
+    {
+        var root = temporaryDirectory.CreateSubdirectory("Existing").FullName;
+        var store = new InMemoryAppSettingsStore();
+        var service = new LibraryService(store);
+
+        await service.OpenAsync(root, default);
+        await service.OpenAsync($"{root}{Path.DirectorySeparatorChar}", default);
+
+        store.Libraries.Should().ContainSingle();
+        store.Settings.LastLibraryPath.Should().Be(root);
+    }
+
+    [Fact]
+    public async Task Pre_canceled_create_does_not_create_library_directory()
+    {
+        var root = Path.Combine(temporaryDirectory.DirectoryPath, "NotCreated");
+        var service = new LibraryService(new InMemoryAppSettingsStore());
+
+        var act = () => service.CreateAsync(
+            "NotCreated",
+            root,
+            new CancellationToken(canceled: true));
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        Directory.Exists(root).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Pre_canceled_open_does_not_create_books_directory()
+    {
+        var root = temporaryDirectory.CreateSubdirectory("Existing").FullName;
+        var service = new LibraryService(new InMemoryAppSettingsStore());
+
+        var act = () => service.OpenAsync(root, new CancellationToken(canceled: true));
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        Directory.Exists(Path.Combine(root, "books")).Should().BeFalse();
+    }
+
     public void Dispose() => temporaryDirectory.Dispose();
 }
