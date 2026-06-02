@@ -30,6 +30,7 @@ public sealed class LibraryDbContext(DbContextOptions<LibraryDbContext> options)
             book.HasKey(x => x.Id);
             book.Property(x => x.Title).IsRequired();
             book.Property(x => x.NormalizedTitle).IsRequired();
+            book.HasIndex(x => x.NormalizedTitle);
             book.Property(x => x.PublicationDate).HasConversion(nullableDateOnlyConverter);
             book.Property(x => x.ReadingStatus).HasConversion<string>();
         });
@@ -71,6 +72,7 @@ public sealed class LibraryDbContext(DbContextOptions<LibraryDbContext> options)
         {
             bookTag.ToTable("BookTags");
             bookTag.HasKey(x => new { x.BookId, x.TagId });
+            bookTag.HasIndex(x => new { x.BookId, x.Order }).IsUnique();
             bookTag.HasOne(x => x.Book)
                 .WithMany(x => x.BookTags)
                 .HasForeignKey(x => x.BookId)

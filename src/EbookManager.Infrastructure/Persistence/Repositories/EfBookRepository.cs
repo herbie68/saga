@@ -31,8 +31,9 @@ public sealed class EfBookRepository(
 
     public async Task<bool> HasHashAsync(string sha256, CancellationToken cancellationToken)
     {
+        var canonicalSha256 = CanonicalizeSha256(sha256);
         await using var context = contextFactory.Create(libraryPath);
-        return await context.BookFiles.AnyAsync(x => x.Sha256 == sha256, cancellationToken);
+        return await context.BookFiles.AnyAsync(x => x.Sha256 == canonicalSha256, cancellationToken);
     }
 
     public async Task<bool> HasNormalizedTitleAndAuthorAsync(
@@ -41,9 +42,8 @@ public sealed class EfBookRepository(
         CancellationToken cancellationToken)
     {
         var normalizedTitle = Normalize(title);
-        var normalizedAuthors = authors
-            .Select(Normalize)
-            .Distinct(StringComparer.Ordinal)
+        var normalizedAuthors = NormalizeMetadataNames(authors)
+            .Select(x => x.NormalizedName)
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
@@ -68,13 +68,14 @@ public sealed class EfBookRepository(
         BookFile file,
         CancellationToken cancellationToken)
     {
+        var fileEntity = ToEntity(file);
         await using var context = contextFactory.Create(libraryPath);
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         var entity = ToEntity(book);
         context.Books.Add(entity);
         await AddAuthorsAsync(context, entity, book.Metadata.Authors, cancellationToken);
         await AddTagsAsync(context, entity, book.Metadata.Tags, cancellationToken);
-        entity.Files.Add(ToEntity(file));
+        entity.Files.Add(fileEntity);
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
@@ -135,10 +136,10 @@ public sealed class EfBookRepository(
         IReadOnlyList<string> authors,
         CancellationToken cancellationToken)
     {
-        for (var order = 0; order < authors.Count; order++)
+        var normalizedAuthors = NormalizeMetadataNames(authors);
+        for (var order = 0; order < normalizedAuthors.Count; order++)
         {
-            var name = authors[order];
-            var normalizedName = Normalize(name);
+            var (name, normalizedName) = normalizedAuthors[order];
             var author = context.Authors.Local
                 .SingleOrDefault(x => x.NormalizedName == normalizedName)
                 ?? await context.Authors
@@ -152,6 +153,10 @@ public sealed class EfBookRepository(
                     NormalizedName = normalizedName
                 };
                 context.Authors.Add(author);
+            }
+            else
+            {
+                author.Name = name;
             }
 
             context.BookAuthors.Add(new BookAuthorEntity
@@ -174,9 +179,10 @@ public sealed class EfBookRepository(
             return;
         }
 
-        foreach (var name in tags)
+        var normalizedTags = NormalizeMetadataNames(tags);
+        for (var order = 0; order < normalizedTags.Count; order++)
         {
-            var normalizedName = Normalize(name);
+            var (name, normalizedName) = normalizedTags[order];
             var tag = context.Tags.Local
                 .SingleOrDefault(x => x.NormalizedName == normalizedName)
                 ?? await context.Tags
@@ -191,11 +197,16 @@ public sealed class EfBookRepository(
                 };
                 context.Tags.Add(tag);
             }
+            else
+            {
+                tag.Name = name;
+            }
 
             context.BookTags.Add(new BookTagEntity
             {
                 BookId = book.Id,
-                TagId = tag.Id
+                TagId = tag.Id,
+                Order = order
             });
         }
     }
@@ -247,7 +258,7 @@ public sealed class EfBookRepository(
             BookId = file.BookId,
             Format = file.Format,
             RelativePath = file.RelativePath,
-            Sha256 = file.Sha256,
+            Sha256 = CanonicalizeSha256(file.Sha256),
             SizeBytes = file.SizeBytes,
             WriteBackStatus = file.WriteBackStatus,
             WriteBackMessage = file.WriteBackMessage
@@ -267,8 +278,8 @@ public sealed class EfBookRepository(
                 entity.Publisher,
                 entity.PublicationDate,
                 entity.BookTags
+                    .OrderBy(x => x.Order)
                     .Select(x => x.Tag.Name)
-                    .OrderBy(x => x, StringComparer.Ordinal)
                     .ToList(),
                 entity.Series,
                 entity.SeriesNumber,
@@ -280,4 +291,45 @@ public sealed class EfBookRepository(
             entity.UpdatedUtc);
 
     private static string Normalize(string value) => value.Trim().ToLowerInvariant();
+
+    private static IReadOnlyList<NormalizedMetadataName> NormalizeMetadataNames(
+        IReadOnlyList<string>? values)
+    {
+        if (values is null)
+        {
+            return [];
+        }
+
+        var normalizedNames = new List<NormalizedMetadataName>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var value in values)
+        {
+            var name = value.Trim();
+            if (name.Length == 0)
+            {
+                continue;
+            }
+
+            var normalizedName = Normalize(name);
+            if (seen.Add(normalizedName))
+            {
+                normalizedNames.Add(new NormalizedMetadataName(name, normalizedName));
+            }
+        }
+
+        return normalizedNames;
+    }
+
+    private static string CanonicalizeSha256(string sha256)
+    {
+        ArgumentNullException.ThrowIfNull(sha256);
+        if (sha256.Length != 64 || sha256.Any(character => !Uri.IsHexDigit(character)))
+        {
+            throw new ArgumentException("SHA-256 hashes must contain exactly 64 hexadecimal characters.", nameof(sha256));
+        }
+
+        return sha256.ToUpperInvariant();
+    }
+
+    private sealed record NormalizedMetadataName(string Name, string NormalizedName);
 }
