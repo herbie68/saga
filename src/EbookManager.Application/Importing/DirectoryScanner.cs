@@ -11,9 +11,28 @@ public sealed class DirectoryScanner
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        var rootDirectory = new DirectoryInfo(Path.GetFullPath(directoryPath));
+        FileAttributes rootAttributes;
+        try
+        {
+            rootAttributes = rootDirectory.Attributes;
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException)
+        {
+            return [];
+        }
+
+        if ((rootAttributes & FileAttributes.ReparsePoint) != 0)
+        {
+            return [];
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
         var matches = new List<string>();
         var directories = new Stack<string>();
-        directories.Push(Path.GetFullPath(directoryPath));
+        directories.Push(rootDirectory.FullName);
 
         while (directories.Count > 0)
         {

@@ -103,6 +103,34 @@ public sealed class ImportPrimitivesTests : IDisposable
     }
 
     [Fact]
+    public void Scanner_returns_empty_when_root_itself_is_a_reparse_point()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var target = Directory.CreateDirectory(Path.Combine(temporaryDirectory.DirectoryPath, "target"));
+        var targetFile = Path.Combine(target.FullName, "root-linked.epub");
+        File.WriteAllText(targetFile, "placeholder");
+        var linkPath = Path.Combine(temporaryDirectory.DirectoryPath, "root-link");
+
+        try
+        {
+            Directory.CreateSymbolicLink(linkPath, target.FullName);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+        {
+            return;
+        }
+
+        var scanner = new DirectoryScanner();
+
+        scanner.Scan(linkPath, recursive: true).Should().BeEmpty();
+        File.Exists(targetFile).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Hasher_returns_stable_uppercase_sha256()
     {
         var path = WriteBytesFile("ebook-manager.txt", Encoding.UTF8.GetBytes("ebook-manager"));
