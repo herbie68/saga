@@ -99,6 +99,47 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Corrupt_load_racing_with_valid_save_does_not_move_saved_target_or_throw()
+    {
+        var path = Path.Combine(temporaryDirectory.DirectoryPath, "settings.json");
+        var store = new JsonAppSettingsStore(temporaryDirectory.DirectoryPath);
+
+        for (var index = 0; index < 100; index++)
+        {
+            await File.WriteAllTextAsync(path, "{");
+            var savedSettings = new AppSettings($"C:\\Library{index}", "nl-NL", "Dark", "List", false);
+            var operations = Enumerable.Range(0, 20)
+                .Select(_ => store.LoadAsync(default))
+                .Cast<Task>()
+                .Append(store.SaveAsync(savedSettings, default));
+
+            var act = () => Task.WhenAll(operations);
+
+            await act.Should().NotThrowAsync();
+            File.Exists(path).Should().BeTrue();
+            (await store.LoadAsync(default)).Should().Be(savedSettings);
+        }
+    }
+
+    [Fact]
+    public async Task Concurrent_corrupt_loads_do_not_throw()
+    {
+        var path = Path.Combine(temporaryDirectory.DirectoryPath, "settings.json");
+        var store = new JsonAppSettingsStore(temporaryDirectory.DirectoryPath);
+
+        for (var index = 0; index < 100; index++)
+        {
+            await File.WriteAllTextAsync(path, "{");
+            var loads = Enumerable.Range(0, 50)
+                .Select(_ => store.LoadAsync(default));
+
+            var act = () => Task.WhenAll(loads);
+
+            await act.Should().NotThrowAsync();
+        }
+    }
+
+    [Fact]
     public async Task Pre_canceled_load_does_not_return_default_settings()
     {
         var store = new JsonAppSettingsStore(temporaryDirectory.DirectoryPath);
