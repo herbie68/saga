@@ -3,7 +3,7 @@ using EbookManager.Domain.Books;
 
 namespace EbookManager.Infrastructure.Metadata;
 
-public sealed class MetadataAdapterResolver
+public sealed class MetadataAdapterResolver : IMetadataAdapterResolver
 {
     private readonly IMetadataAdapter fallbackAdapter;
     private readonly IReadOnlyDictionary<EbookFormat, IMetadataAdapter> specificAdaptersByFormat;
