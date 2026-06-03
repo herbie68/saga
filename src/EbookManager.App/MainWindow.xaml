@@ -109,6 +109,18 @@
                      FontSize="16"
                      Foreground="{DynamicResource TextPrimaryBrush}"
                      Margin="0,0,0,12" />
+          <TextBlock Text="Sort by"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     Margin="0,0,0,4" />
+          <ComboBox SelectedItem="{Binding SelectedSortOption}"
+                    Margin="0,0,0,12"
+                    ToolTip="Sort the current library view">
+            <viewModels:LibrarySortOption>None</viewModels:LibrarySortOption>
+            <viewModels:LibrarySortOption>Title</viewModels:LibrarySortOption>
+            <viewModels:LibrarySortOption>Author</viewModels:LibrarySortOption>
+            <viewModels:LibrarySortOption>EReader</viewModels:LibrarySortOption>
+            <viewModels:LibrarySortOption>Category</viewModels:LibrarySortOption>
+          </ComboBox>
           <Expander Header="Authors" IsExpanded="True" Margin="0,0,0,6">
             <ScrollViewer MaxHeight="180"
                           VerticalScrollBarVisibility="Auto">

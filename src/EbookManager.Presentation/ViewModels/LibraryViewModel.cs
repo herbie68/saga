@@ -52,6 +52,9 @@ public sealed partial class LibraryViewModel(
     private LibraryView selectedView = LibraryView.Detailed;
 
     [ObservableProperty]
+    private LibrarySortOption selectedSortOption = LibrarySortOption.None;
+
+    [ObservableProperty]
     private BookRowViewModel? selectedBook;
 
     [ObservableProperty]
@@ -92,6 +95,8 @@ public sealed partial class LibraryViewModel(
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
+
+    partial void OnSelectedSortOptionChanged(LibrarySortOption value) => ApplyFilter();
 
     partial void OnSelectedBookChanged(BookRowViewModel? value)
     {
@@ -215,9 +220,11 @@ public sealed partial class LibraryViewModel(
     private void ApplyFilter()
     {
         var selectedId = SelectedBook?.Id;
-        var rows = ApplyLanguageFilter(ApplyEReaderFilter(ApplyStatusFilter(ApplySeriesFilter(
-                ApplyCategoryFilter(ApplyAuthorFilter(searchService.Filter(books, SearchText)))))))
-            .Select(book => new BookRowViewModel(book, SearchText))
+        var filteredBooks = ApplyLanguageFilter(ApplyEReaderFilter(ApplyStatusFilter(ApplySeriesFilter(
+            ApplyCategoryFilter(ApplyAuthorFilter(searchService.Filter(books, SearchText)))))));
+        var rows = ApplySort(
+                filteredBooks.Select(book => new BookRowViewModel(book, SearchText)),
+                SelectedSortOption)
             .ToList();
 
         VisibleBooks.Clear();
@@ -380,6 +387,28 @@ public sealed partial class LibraryViewModel(
 
     private static IEnumerable<string> SingleOptionalValue(string? value) =>
         string.IsNullOrWhiteSpace(value) ? [] : [value];
+
+    private static IEnumerable<BookRowViewModel> ApplySort(
+        IEnumerable<BookRowViewModel> rows,
+        LibrarySortOption sortOption)
+    {
+        return sortOption switch
+        {
+            LibrarySortOption.Title => rows
+                .OrderBy(row => row.Title, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(row => row.Authors, StringComparer.CurrentCultureIgnoreCase),
+            LibrarySortOption.Author => rows
+                .OrderBy(row => row.Authors, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(row => row.Title, StringComparer.CurrentCultureIgnoreCase),
+            LibrarySortOption.EReader => rows
+                .OrderBy(row => row.EReader, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(row => row.Title, StringComparer.CurrentCultureIgnoreCase),
+            LibrarySortOption.Category => rows
+                .OrderBy(row => row.Book.Metadata.Tags?.FirstOrDefault() ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(row => row.Title, StringComparer.CurrentCultureIgnoreCase),
+            _ => rows
+        };
+    }
 
     partial void OnCurrentLibraryPathChanged(string? value) => OnPropertyChanged(nameof(HasActiveLibrary));
 

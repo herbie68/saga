@@ -126,6 +126,29 @@ public sealed class LibraryViewModelTests
     }
 
     [Fact]
+    public async Task Sort_option_orders_visible_rows_by_metadata()
+    {
+        var dune = CreateBook("Dune", ["Frank Herbert"], tags: ["Science fiction"]);
+        var hobbit = CreateBook("The Hobbit", ["Tolkien"], tags: ["Fantasy"]);
+        var alpha = CreateBook("Alpha", ["Zed"], tags: ["Mystery"]);
+        var viewModel = CreateViewModel([dune, hobbit, alpha]);
+
+        await viewModel.RefreshAsync();
+
+        viewModel.SelectedSortOption = LibrarySortOption.Title;
+        viewModel.VisibleBooks.Select(book => book.Title)
+            .Should().Equal("Alpha", "Dune", "The Hobbit");
+
+        viewModel.SelectedSortOption = LibrarySortOption.Author;
+        viewModel.VisibleBooks.Select(book => book.Title)
+            .Should().Equal("Dune", "The Hobbit", "Alpha");
+
+        viewModel.SelectedSortOption = LibrarySortOption.Category;
+        viewModel.VisibleBooks.Select(book => book.Title)
+            .Should().Equal("The Hobbit", "Alpha", "Dune");
+    }
+
+    [Fact]
     public async Task Selecting_a_book_loads_details()
     {
         var book = CreateBook("Selected", ["Author"]);
