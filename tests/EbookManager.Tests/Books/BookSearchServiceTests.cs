@@ -39,6 +39,17 @@ public sealed class BookSearchServiceTests
         result.Should().HaveCount(books.Count);
     }
 
+    [Fact]
+    public void Reading_status_search_matches_the_exact_status_name()
+    {
+        var service = new BookSearchService();
+        var books = CreateBooks();
+
+        var result = service.Filter(books, "read");
+
+        result.Should().ContainSingle(book => book.ReadingStatus == ReadingStatus.Read);
+    }
+
     private static IReadOnlyList<Book> CreateBooks()
     {
         var now = DateTimeOffset.UtcNow;

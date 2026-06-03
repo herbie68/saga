@@ -26,9 +26,12 @@ public sealed class BookSearchService
         (book.Metadata.Tags?.Any(tag => Contains(tag, searchText)) ?? false) ||
         Contains(book.Metadata.Series, searchText) ||
         Contains(book.Metadata.Isbn, searchText) ||
-        Contains(book.ReadingStatus.ToString(), searchText);
+        MatchesReadingStatus(book.ReadingStatus, searchText);
 
     private static bool Contains(string? value, string searchText) =>
         !string.IsNullOrWhiteSpace(value) &&
         value.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+
+    private static bool MatchesReadingStatus(ReadingStatus status, string searchText) =>
+        status.ToString().Equals(searchText, StringComparison.OrdinalIgnoreCase);
 }

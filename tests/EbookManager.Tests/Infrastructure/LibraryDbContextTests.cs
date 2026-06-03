@@ -1,5 +1,6 @@
 using EbookManager.Domain.Books;
 using EbookManager.Domain.Importing;
+using EbookManager.Domain.Metadata;
 using EbookManager.Infrastructure.Persistence;
 using EbookManager.Infrastructure.Persistence.Entities;
 using EbookManager.Infrastructure.Persistence.Repositories;
@@ -176,6 +177,52 @@ public sealed class LibraryDbContextTests
         (await context.BookTags.AnyAsync()).Should().BeFalse();
         (await context.Authors.AnyAsync()).Should().BeFalse();
         (await context.Tags.AnyAsync()).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Repository_lists_files_in_stable_order_and_persists_writeback_results()
+    {
+        using var library = new TemporaryLibrary();
+        var libraryPath = library.DirectoryPath;
+        var factory = await CreateMigratedFactoryAsync(libraryPath);
+        var repository = new EfBookRepository(factory, libraryPath);
+        var book = CreateBook("Files", ["Author"]);
+        var firstFile = CreateFile(book.Id, Hash('A')) with
+        {
+            RelativePath = $"books/{book.Id:N}/z.epub"
+        };
+        var secondFile = CreateFile(book.Id, Hash('B')) with
+        {
+            RelativePath = $"books/{book.Id:N}/a.epub"
+        };
+        await repository.AddAsync(book, firstFile, default);
+        await using (var context = factory.Create(libraryPath))
+        {
+            context.BookFiles.Add(new BookFileEntity
+            {
+                Id = secondFile.Id,
+                BookId = secondFile.BookId,
+                Format = secondFile.Format,
+                RelativePath = secondFile.RelativePath,
+                Sha256 = secondFile.Sha256,
+                SizeBytes = secondFile.SizeBytes,
+                WriteBackStatus = secondFile.WriteBackStatus,
+                WriteBackMessage = secondFile.WriteBackMessage
+            });
+            await context.SaveChangesAsync();
+        }
+
+        var files = await repository.ListFilesAsync(book.Id, default);
+        await repository.UpdateFileWriteBackAsync(
+            secondFile.Id,
+            new MetadataWriteResult(MetadataWriteBackStatus.Failed, "metadata write failed"),
+            default);
+
+        files.Select(x => x.RelativePath).Should().Equal(secondFile.RelativePath, firstFile.RelativePath);
+        await using var verificationContext = factory.Create(libraryPath);
+        var reloadedSecondFile = await verificationContext.BookFiles.SingleAsync(x => x.Id == secondFile.Id);
+        reloadedSecondFile.WriteBackStatus.Should().Be(MetadataWriteBackStatus.Failed);
+        reloadedSecondFile.WriteBackMessage.Should().Be("metadata write failed");
     }
 
     [Fact]

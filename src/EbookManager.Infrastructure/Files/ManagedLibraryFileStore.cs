@@ -138,12 +138,15 @@ public sealed class ManagedLibraryFileStore(string libraryRootPath) : ILibraryFi
     private string EnsureContained(string path)
     {
         var fullPath = Canonicalize(path);
+        var pathComparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
         var rootWithSeparator = libraryRoot.EndsWith(Path.DirectorySeparatorChar)
             ? libraryRoot
             : $"{libraryRoot}{Path.DirectorySeparatorChar}";
 
-        if (!fullPath.Equals(libraryRoot, StringComparison.OrdinalIgnoreCase) &&
-            !fullPath.StartsWith(rootWithSeparator, StringComparison.OrdinalIgnoreCase))
+        if (!fullPath.Equals(libraryRoot, pathComparison) &&
+            !fullPath.StartsWith(rootWithSeparator, pathComparison))
         {
             throw new InvalidOperationException($"Path '{path}' escapes the managed library root.");
         }
