@@ -18,7 +18,8 @@ public sealed partial class LibraryViewModel(
     ImportService? importService = null,
     LibraryService? libraryService = null,
     CurrentLibrary? currentLibrary = null,
-    ILibraryDatabaseInitializer? databaseInitializer = null)
+    ILibraryDatabaseInitializer? databaseInitializer = null,
+    DirectoryScanner? directoryScanner = null)
     : ObservableObject
 {
     private readonly IBookRepository bookRepository = bookRepository;
@@ -28,6 +29,7 @@ public sealed partial class LibraryViewModel(
     private readonly LibraryService? libraryService = libraryService;
     private readonly CurrentLibrary? currentLibrary = currentLibrary;
     private readonly ILibraryDatabaseInitializer? databaseInitializer = databaseInitializer;
+    private readonly DirectoryScanner? directoryScanner = directoryScanner;
     private IReadOnlyList<Book> books = [];
 
     public ObservableCollection<BookRowViewModel> VisibleBooks { get; } = [];
@@ -54,6 +56,9 @@ public sealed partial class LibraryViewModel(
 
     [ObservableProperty]
     private string emptyStateMessage = "Create or open a library to get started.";
+
+    [ObservableProperty]
+    private bool includeScanSubdirectories = true;
 
     public bool HasActiveLibrary => CurrentLibraryPath is not null;
 
@@ -106,6 +111,24 @@ public sealed partial class LibraryViewModel(
             return;
         }
 
+        await ImportFilesAsync(paths, cancellationToken);
+    }
+
+    public async Task ImportFilesAsync(
+        IReadOnlyList<string> paths,
+        CancellationToken cancellationToken = default)
+    {
+        if (!HasActiveLibrary)
+        {
+            EmptyStateMessage = "Create or open a library before adding books.";
+            return;
+        }
+
+        if (paths.Count == 0 || importService is null)
+        {
+            return;
+        }
+
         var result = await importService.ImportAsync(paths, cancellationToken);
         LastImportResult = new ImportResultViewModel(result);
         await userInteraction.ShowImportResultAsync(LastImportResult, cancellationToken);
@@ -120,7 +143,19 @@ public sealed partial class LibraryViewModel(
             return;
         }
 
-        await userInteraction.PickScanFolderAsync(cancellationToken);
+        if (directoryScanner is null || importService is null)
+        {
+            return;
+        }
+
+        var folder = await userInteraction.PickScanFolderAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            return;
+        }
+
+        var files = directoryScanner.Scan(folder, IncludeScanSubdirectories, cancellationToken);
+        await ImportFilesAsync(files, cancellationToken);
     }
 
     private async Task CreateLibraryAsync(CancellationToken cancellationToken)

@@ -112,6 +112,9 @@
           <Expander Header="Title" IsEnabled="False" Margin="0,0,0,6" />
           <Expander Header="E-reader" IsEnabled="False" Margin="0,0,0,6" />
           <Expander Header="Category" IsEnabled="False" Margin="0,0,0,12" />
+          <CheckBox Content="Include subdirectories when scanning"
+                    IsChecked="{Binding IncludeScanSubdirectories}"
+                    Margin="0,0,0,12" />
           <TextBlock Text="Facet filters follow in a later milestone."
                      TextWrapping="Wrap"
                      Foreground="{DynamicResource TextSecondaryBrush}" />
@@ -122,7 +125,10 @@
               Background="{DynamicResource PanelBackgroundBrush}"
               CornerRadius="16"
               Padding="10"
-              Margin="0,0,12,0">
+              Margin="0,0,12,0"
+              AllowDrop="True"
+              DragOver="LibraryDropZoneDragOver"
+              Drop="LibraryDropZoneDrop">
         <Grid>
           <Border Background="{DynamicResource PanelBackgroundBrush}"
                   Panel.ZIndex="1">

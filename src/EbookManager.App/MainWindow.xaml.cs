@@ -40,4 +40,20 @@ public partial class MainWindow : System.Windows.Window
         };
         window.ShowDialog();
     }
+
+    private void LibraryDropZoneDragOver(object sender, System.Windows.DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
+            ? System.Windows.DragDropEffects.Copy
+            : System.Windows.DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private async void LibraryDropZoneDrop(object sender, System.Windows.DragEventArgs e)
+    {
+        if (e.Data.GetData(System.Windows.DataFormats.FileDrop) is string[] paths)
+        {
+            await viewModel.ImportFilesAsync(paths);
+        }
+    }
 }

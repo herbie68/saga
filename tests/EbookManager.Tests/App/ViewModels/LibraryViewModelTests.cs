@@ -121,6 +121,18 @@ public sealed class LibraryViewModelTests
         viewModel.EmptyStateMessage.Should().Be("Create or open a library before adding books.");
     }
 
+    [Fact]
+    public async Task ScanFolderCommand_without_active_library_updates_empty_state_without_prompting_for_folder()
+    {
+        var interaction = new ScriptedUserInteractionService();
+        var viewModel = CreateViewModel([], interaction);
+
+        await viewModel.ScanFolderCommand.ExecuteAsync(null);
+
+        interaction.PickScanFolderCalls.Should().Be(0);
+        viewModel.EmptyStateMessage.Should().Be("Create or open a library before scanning folders.");
+    }
+
     private static LibraryViewModel CreateViewModel(
         IReadOnlyList<Book> books,
         IUserInteractionService? userInteraction = null,
@@ -205,11 +217,16 @@ public sealed class LibraryViewModelTests
     {
         public string? LibraryDirectory { get; init; }
         public int PickBookFilesCalls { get; private set; }
+        public int PickScanFolderCalls { get; private set; }
 
         public Task<IReadOnlyList<string>> PickBookFilesAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<string>>(RecordPickBookFiles());
 
-        public Task<string?> PickScanFolderAsync(CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+        public Task<string?> PickScanFolderAsync(CancellationToken cancellationToken)
+        {
+            PickScanFolderCalls++;
+            return Task.FromResult<string?>(null);
+        }
         public Task<string?> PickLibraryDirectoryAsync(string title, CancellationToken cancellationToken) =>
             Task.FromResult(LibraryDirectory);
 
