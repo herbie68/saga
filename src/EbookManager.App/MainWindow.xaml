@@ -109,14 +109,28 @@
                      FontSize="16"
                      Foreground="{DynamicResource TextPrimaryBrush}"
                      Margin="0,0,0,12" />
-          <Expander Header="Authors" IsEnabled="False" Margin="0,0,0,6" />
+          <Expander Header="Authors" IsExpanded="True" Margin="0,0,0,6">
+            <ScrollViewer MaxHeight="180"
+                          VerticalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding AuthorFilters}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <CheckBox Content="{Binding DisplayName}"
+                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              Margin="0,2"
+                              Foreground="{DynamicResource TextSecondaryBrush}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Expander>
           <Expander Header="Title" IsEnabled="False" Margin="0,0,0,6" />
           <Expander Header="E-reader" IsEnabled="False" Margin="0,0,0,6" />
           <Expander Header="Category" IsEnabled="False" Margin="0,0,0,12" />
           <CheckBox Content="Include subdirectories when scanning"
                     IsChecked="{Binding IncludeScanSubdirectories}"
                     Margin="0,0,0,12" />
-          <TextBlock Text="Facet filters follow in a later milestone."
+          <TextBlock Text="More facet filters follow in a later milestone."
                      TextWrapping="Wrap"
                      Foreground="{DynamicResource TextSecondaryBrush}" />
         </StackPanel>

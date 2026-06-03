@@ -33,6 +33,7 @@ public sealed partial class LibraryViewModel(
     private IReadOnlyList<Book> books = [];
 
     public ObservableCollection<BookRowViewModel> VisibleBooks { get; } = [];
+    public ObservableCollection<FacetFilterViewModel> AuthorFilters { get; } = [];
 
     public BookDetailsViewModel Details { get; } = details;
 
@@ -79,6 +80,7 @@ public sealed partial class LibraryViewModel(
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
         books = await bookRepository.ListAsync(cancellationToken);
+        RefreshAuthorFilters();
         ApplyFilter();
         RefreshLibraryDisplay();
     }
@@ -205,7 +207,7 @@ public sealed partial class LibraryViewModel(
     private void ApplyFilter()
     {
         var selectedId = SelectedBook?.Id;
-        var rows = searchService.Filter(books, SearchText)
+        var rows = ApplyAuthorFilter(searchService.Filter(books, SearchText))
             .Select(book => new BookRowViewModel(book, SearchText))
             .ToList();
 
@@ -222,6 +224,53 @@ public sealed partial class LibraryViewModel(
         EmptyStateMessage = HasActiveLibrary
             ? "This library is empty. Add books or scan a folder to begin."
             : "Create or open a library to get started.";
+    }
+
+    private IReadOnlyList<Book> ApplyAuthorFilter(IReadOnlyList<Book> source)
+    {
+        if (AuthorFilters.Count == 0)
+        {
+            return source;
+        }
+
+        var selectedAuthors = AuthorFilters
+            .Where(filter => filter.IsSelected)
+            .Select(filter => filter.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (selectedAuthors.Count == AuthorFilters.Count)
+        {
+            return source;
+        }
+
+        return source
+            .Where(book => book.Metadata.Authors.Any(selectedAuthors.Contains))
+            .ToList();
+    }
+
+    private void RefreshAuthorFilters()
+    {
+        var existingSelections = AuthorFilters.ToDictionary(
+            filter => filter.Name,
+            filter => filter.IsSelected,
+            StringComparer.OrdinalIgnoreCase);
+        var authorCounts = books
+            .SelectMany(book => book.Metadata.Authors)
+            .Where(author => !string.IsNullOrWhiteSpace(author))
+            .GroupBy(author => author.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Select(group => new
+            {
+                Name = group.First(),
+                Count = group.Count()
+            })
+            .OrderBy(author => author.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        AuthorFilters.Clear();
+        foreach (var author in authorCounts)
+        {
+            var isSelected = !existingSelections.TryGetValue(author.Name, out var existingSelection) || existingSelection;
+            AuthorFilters.Add(new FacetFilterViewModel(author.Name, author.Count, isSelected, ApplyFilter));
+        }
     }
 
     partial void OnCurrentLibraryPathChanged(string? value) => OnPropertyChanged(nameof(HasActiveLibrary));

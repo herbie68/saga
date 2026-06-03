@@ -43,6 +43,24 @@ public sealed class LibraryViewModelTests
     }
 
     [Fact]
+    public async Task Author_filters_are_built_from_books_and_filter_visible_rows()
+    {
+        var hobbit = CreateBook("The Hobbit", ["Tolkien"]);
+        var dune = CreateBook("Dune", ["Frank Herbert"]);
+        var viewModel = CreateViewModel([hobbit, dune]);
+
+        await viewModel.RefreshAsync();
+
+        viewModel.AuthorFilters.Select(filter => filter.DisplayName)
+            .Should().Equal("Frank Herbert (1)", "Tolkien (1)");
+
+        viewModel.AuthorFilters.Single(filter => filter.Name == "Tolkien").IsSelected = false;
+
+        viewModel.VisibleBooks.Should().ContainSingle()
+            .Which.Title.Should().Be("Dune");
+    }
+
+    [Fact]
     public async Task Selecting_a_book_loads_details()
     {
         var book = CreateBook("Selected", ["Author"]);
