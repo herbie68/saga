@@ -1,0 +1,33 @@
+<Window x:Class="EbookManager.App.Views.ImportResultWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Import results"
+        Width="760"
+        Height="480"
+        WindowStartupLocation="CenterOwner">
+  <DockPanel Margin="16">
+    <StackPanel Orientation="Horizontal"
+                DockPanel.Dock="Top"
+                Margin="0,0,0,12">
+      <TextBlock Text="{Binding AddedCount, StringFormat=Added: {0}}" Margin="0,0,16,0" />
+      <TextBlock Text="{Binding ExactDuplicateCount, StringFormat=Duplicates: {0}}" Margin="0,0,16,0" />
+      <TextBlock Text="{Binding PossibleDuplicateCount, StringFormat=Possible duplicates: {0}}" Margin="0,0,16,0" />
+      <TextBlock Text="{Binding FailedCount, StringFormat=Failed: {0}}" />
+    </StackPanel>
+    <Button Content="Close"
+            DockPanel.Dock="Bottom"
+            HorizontalAlignment="Right"
+            MinWidth="90"
+            Margin="0,12,0,0"
+            Click="CloseClicked" />
+    <DataGrid ItemsSource="{Binding Items}"
+              AutoGenerateColumns="False"
+              IsReadOnly="True">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="File" Binding="{Binding SourcePath}" Width="*" />
+        <DataGridTextColumn Header="Outcome" Binding="{Binding Outcome}" Width="150" />
+        <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2*" />
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
+</Window>

@@ -1,0 +1,32 @@
+<UserControl x:Class="EbookManager.App.Views.DetailedGridView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:syncfusion="http://schemas.syncfusion.com/wpf">
+  <syncfusion:SfDataGrid ItemsSource="{Binding VisibleBooks}"
+                         SelectedItem="{Binding SelectedBook, Mode=TwoWay}"
+                         AutoGenerateColumns="False"
+                         AllowEditing="False"
+                         AllowSorting="True"
+                         NavigationMode="Row"
+                         SelectionMode="Single"
+                         HeaderRowHeight="36"
+                         RowHeight="42">
+    <syncfusion:SfDataGrid.Columns>
+      <syncfusion:GridTextColumn HeaderText="Cover"
+                                 MappingName="CoverRelativePath"
+                                 Width="80" />
+      <syncfusion:GridTextColumn HeaderText="Title"
+                                 MappingName="Title"
+                                 Width="220" />
+      <syncfusion:GridTextColumn HeaderText="Authors"
+                                 MappingName="Authors"
+                                 Width="220" />
+      <syncfusion:GridTextColumn HeaderText="Status"
+                                 MappingName="ReadingStatus"
+                                 Width="120" />
+      <syncfusion:GridTextColumn HeaderText="E-reader"
+                                 MappingName="EReader"
+                                 Width="120" />
+    </syncfusion:SfDataGrid.Columns>
+  </syncfusion:SfDataGrid>
+</UserControl>

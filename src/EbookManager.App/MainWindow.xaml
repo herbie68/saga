@@ -1,26 +1,172 @@
 <Window x:Class="EbookManager.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:EbookManager.App.Views"
+        xmlns:viewModels="clr-namespace:EbookManager.Presentation.ViewModels;assembly=EbookManager.Presentation"
         Title="Ebook Manager"
-        Width="960"
-        Height="600"
-        MinWidth="720"
-        MinHeight="480"
+        Width="1360"
+        Height="820"
+        MinWidth="1100"
+        MinHeight="680"
         WindowStartupLocation="CenterScreen">
-  <Grid Background="#FFF8FAFC">
-    <StackPanel HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                MaxWidth="560">
-      <TextBlock Text="Ebook Manager"
-                 FontSize="34"
-                 FontWeight="SemiBold"
-                 HorizontalAlignment="Center"
-                 Margin="0,0,0,12" />
-      <TextBlock Text="The native Windows shell is ready."
-                 TextAlignment="Center"
-                 FontSize="16"
-                 Foreground="#FF475569"
-                 TextWrapping="Wrap" />
-    </StackPanel>
+  <Grid Background="{DynamicResource AppBackgroundBrush}">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="64" />
+      <RowDefinition Height="56" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="30" />
+    </Grid.RowDefinitions>
+
+    <Border Grid.Row="0"
+            Background="{DynamicResource PanelBackgroundBrush}"
+            BorderBrush="#22000000"
+            BorderThickness="0,0,0,1">
+      <DockPanel Margin="16,0">
+        <TextBlock Text="Ebook Manager"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   DockPanel.Dock="Left" />
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    DockPanel.Dock="Right">
+          <Button Content="New library"
+                  Command="{Binding CreateLibraryCommand}"
+                  Margin="6,12"
+                  Padding="14,6"
+                  ToolTip="Create a new library" />
+          <Button Content="Add books"
+                  Command="{Binding AddBooksCommand}"
+                  Margin="6,12"
+                  Padding="14,6"
+                  ToolTip="Add books" />
+          <Button Content="Scan"
+                  Command="{Binding ScanFolderCommand}"
+                  Margin="6,12"
+                  Padding="14,6"
+                  ToolTip="Scan a folder" />
+          <Button Content="Settings"
+                  Margin="6,12"
+                  Padding="14,6"
+                  ToolTip="Open settings"
+                  Click="OpenSettingsClicked" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Border Grid.Row="1"
+            Padding="16,10"
+            Background="{DynamicResource AppBackgroundBrush}">
+      <DockPanel>
+        <ComboBox SelectedItem="{Binding SelectedView}"
+                  Width="180"
+                  Height="32"
+                  DockPanel.Dock="Left">
+          <viewModels:LibraryView>Bookshelf</viewModels:LibraryView>
+          <viewModels:LibraryView>Detailed</viewModels:LibraryView>
+          <viewModels:LibraryView>List</viewModels:LibraryView>
+        </ComboBox>
+        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                 Width="360"
+                 Height="32"
+                 HorizontalAlignment="Right"
+                 ToolTip="Search all fields" />
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="2" Margin="16,0,16,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="220" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="340" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0"
+              Background="{DynamicResource PanelBackgroundBrush}"
+              CornerRadius="16"
+              Padding="14"
+              Margin="0,0,12,0">
+        <StackPanel>
+          <TextBlock Text="Filters"
+                     FontWeight="SemiBold"
+                     FontSize="16"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     Margin="0,0,0,12" />
+          <Expander Header="Authors" IsEnabled="False" Margin="0,0,0,6" />
+          <Expander Header="Title" IsEnabled="False" Margin="0,0,0,6" />
+          <Expander Header="E-reader" IsEnabled="False" Margin="0,0,0,6" />
+          <Expander Header="Category" IsEnabled="False" Margin="0,0,0,12" />
+          <TextBlock Text="Facet filters follow in a later milestone."
+                     TextWrapping="Wrap"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Column="1"
+              Background="{DynamicResource PanelBackgroundBrush}"
+              CornerRadius="16"
+              Padding="10"
+              Margin="0,0,12,0">
+        <Grid>
+          <views:BookshelfView>
+            <views:BookshelfView.Style>
+              <Style TargetType="views:BookshelfView">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding SelectedView}" Value="Bookshelf">
+                    <Setter Property="Visibility" Value="Visible" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </views:BookshelfView.Style>
+          </views:BookshelfView>
+          <views:DetailedGridView>
+            <views:DetailedGridView.Style>
+              <Style TargetType="views:DetailedGridView">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding SelectedView}" Value="Detailed">
+                    <Setter Property="Visibility" Value="Visible" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </views:DetailedGridView.Style>
+          </views:DetailedGridView>
+          <views:LibraryListView>
+            <views:LibraryListView.Style>
+              <Style TargetType="views:LibraryListView">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding SelectedView}" Value="List">
+                    <Setter Property="Visibility" Value="Visible" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </views:LibraryListView.Style>
+          </views:LibraryListView>
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="2"
+              Background="{DynamicResource PanelBackgroundBrush}"
+              CornerRadius="16">
+        <views:BookDetailsView DataContext="{Binding Details}" />
+      </Border>
+    </Grid>
+
+    <Border Grid.Row="3"
+            Padding="16,0"
+            Background="{DynamicResource PanelBackgroundBrush}">
+      <DockPanel>
+        <TextBlock Text="{Binding VisibleBookCount, StringFormat=Books: {0}}"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Text="Version 26.6"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+      </DockPanel>
+    </Border>
   </Grid>
 </Window>

@@ -1,0 +1,71 @@
+<UserControl x:Class="EbookManager.App.Views.BookDetailsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:books="clr-namespace:EbookManager.Domain.Books;assembly=EbookManager.Domain">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="16">
+      <Border Background="#FFFFF3CD"
+              CornerRadius="8"
+              Padding="10"
+              Margin="0,0,0,12">
+        <Border.Style>
+          <Style TargetType="Border">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding HasUnsavedChanges}" Value="True">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Border.Style>
+        <TextBlock Text="There are unsaved changes."
+                   Foreground="#FF7A4A00" />
+      </Border>
+
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+        <Button Content="Save"
+                Command="{Binding SaveCommand}"
+                MinWidth="70"
+                Margin="0,0,8,0" />
+        <Button Content="Undo"
+                Command="{Binding UndoCommand}"
+                MinWidth="70"
+                Margin="0,0,8,0" />
+        <Button Content="Delete"
+                Command="{Binding DeleteCommand}"
+                MinWidth="70" />
+      </StackPanel>
+
+      <TextBlock Text="Title" FontWeight="SemiBold" />
+      <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+      <TextBlock Text="Authors" FontWeight="SemiBold" />
+      <TextBox Text="{Binding AuthorsText, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+      <TextBlock Text="Description" FontWeight="SemiBold" />
+      <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+               AcceptsReturn="True"
+               Height="120"
+               TextWrapping="Wrap"
+               Margin="0,4,0,10" />
+      <TextBlock Text="Language" FontWeight="SemiBold" />
+      <TextBox Text="{Binding Language, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+      <TextBlock Text="Publisher" FontWeight="SemiBold" />
+      <TextBox Text="{Binding Publisher, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+      <TextBlock Text="Tags" FontWeight="SemiBold" />
+      <TextBox Text="{Binding TagsText, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+      <TextBlock Text="Series" FontWeight="SemiBold" />
+      <TextBox Text="{Binding Series, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+      <TextBlock Text="Series number" FontWeight="SemiBold" />
+      <TextBox Text="{Binding SeriesNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+      <TextBlock Text="ISBN" FontWeight="SemiBold" />
+      <TextBox Text="{Binding Isbn, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
+      <TextBlock Text="Status" FontWeight="SemiBold" />
+      <ComboBox SelectedValue="{Binding ReadingStatus}"
+                SelectedValuePath="Tag"
+                Margin="0,4,0,10">
+        <ComboBoxItem Content="Unread" Tag="{x:Static books:ReadingStatus.Unread}" />
+        <ComboBoxItem Content="Reading" Tag="{x:Static books:ReadingStatus.Reading}" />
+        <ComboBoxItem Content="Read" Tag="{x:Static books:ReadingStatus.Read}" />
+      </ComboBox>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

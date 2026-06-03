@@ -8,6 +8,8 @@ using EbookManager.Infrastructure.Persistence;
 using EbookManager.Infrastructure.Persistence.Repositories;
 using EbookManager.Infrastructure.Settings;
 using EbookManager.Libraries;
+using EbookManager.Presentation.Abstractions;
+using EbookManager.Presentation.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Syncfusion.Licensing;
 
@@ -72,6 +74,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<LocalizationService>();
         services.AddSingleton<ThemeService>();
         services.AddSingleton<DeleteConfirmationService>();
+        services.AddSingleton<IUserInteractionService, UserInteractionService>();
         services.AddSingleton<DirectoryScanner>();
         services.AddSingleton<Sha256FileHasher>();
         services.AddSingleton<IImportExceptionClassifier, SqliteImportExceptionClassifier>();
@@ -80,42 +83,14 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IMetadataAdapter, CbzMetadataAdapter>();
         services.AddSingleton<IMetadataAdapterResolver, MetadataAdapterResolver>();
         services.AddSingleton<BookSearchService>();
-        services.AddTransient<ILibraryFileStore>(sp =>
-        {
-            var currentLibrary = sp.GetRequiredService<CurrentLibrary>().Current;
-            if (currentLibrary is null)
-            {
-                throw new InvalidOperationException("No active library is loaded.");
-            }
-
-            return new ManagedLibraryFileStore(currentLibrary.DirectoryPath);
-        });
-        services.AddTransient<IBookRepository>(sp =>
-        {
-            var currentLibrary = sp.GetRequiredService<CurrentLibrary>().Current;
-            if (currentLibrary is null)
-            {
-                throw new InvalidOperationException("No active library is loaded.");
-            }
-
-            return new EfBookRepository(
-                sp.GetRequiredService<LibraryDbContextFactory>(),
-                currentLibrary.DirectoryPath);
-        });
-        services.AddTransient<IImportRepository>(sp =>
-        {
-            var currentLibrary = sp.GetRequiredService<CurrentLibrary>().Current;
-            if (currentLibrary is null)
-            {
-                throw new InvalidOperationException("No active library is loaded.");
-            }
-
-            return new EfImportRepository(
-                sp.GetRequiredService<LibraryDbContextFactory>(),
-                currentLibrary.DirectoryPath);
-        });
+        services.AddSingleton<ILibraryFileStore, CurrentLibraryFileStore>();
+        services.AddSingleton<IBookRepository, CurrentLibraryBookRepository>();
+        services.AddSingleton<IImportRepository, CurrentLibraryImportRepository>();
         services.AddTransient<BookService>();
         services.AddTransient<ImportService>();
+        services.AddTransient<BookDetailsViewModel>();
+        services.AddTransient<LibraryViewModel>();
+        services.AddTransient<SettingsViewModel>();
         services.AddSingleton<MainWindow>();
 
         return services.BuildServiceProvider();
