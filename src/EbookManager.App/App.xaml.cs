@@ -69,7 +69,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IMetadataAdapter, FallbackMetadataAdapter>();
         services.AddSingleton<IMetadataAdapter, EpubMetadataAdapter>();
         services.AddSingleton<IMetadataAdapter, CbzMetadataAdapter>();
-        services.AddSingleton<MetadataAdapterResolver>();
+        services.AddSingleton<IMetadataAdapterResolver, MetadataAdapterResolver>();
         services.AddSingleton<BookSearchService>();
         services.AddTransient<ILibraryFileStore>(sp =>
         {
