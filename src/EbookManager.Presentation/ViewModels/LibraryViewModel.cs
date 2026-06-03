@@ -33,6 +33,7 @@ public sealed partial class LibraryViewModel(
     private readonly DirectoryScanner? directoryScanner = directoryScanner;
     private readonly IAppSettingsStore? settingsStore = settingsStore;
     private IReadOnlyList<Book> books = [];
+    private bool hasAppliedDefaultView;
 
     public ObservableCollection<BookRowViewModel> VisibleBooks { get; } = [];
     public ObservableCollection<FacetFilterViewModel> AuthorFilters { get; } = [];
@@ -83,6 +84,7 @@ public sealed partial class LibraryViewModel(
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
+        await ApplyDefaultViewAsync(cancellationToken);
         books = await bookRepository.ListAsync(cancellationToken);
         RefreshFacetFilters();
         ApplyFilter();
@@ -380,6 +382,21 @@ public sealed partial class LibraryViewModel(
         string.IsNullOrWhiteSpace(value) ? [] : [value];
 
     partial void OnCurrentLibraryPathChanged(string? value) => OnPropertyChanged(nameof(HasActiveLibrary));
+
+    private async Task ApplyDefaultViewAsync(CancellationToken cancellationToken)
+    {
+        if (hasAppliedDefaultView || settingsStore is null)
+        {
+            return;
+        }
+
+        hasAppliedDefaultView = true;
+        var settings = await settingsStore.LoadAsync(cancellationToken);
+        if (Enum.TryParse<LibraryView>(settings.DefaultView, ignoreCase: true, out var defaultView))
+        {
+            SelectedView = defaultView;
+        }
+    }
 
     private void RefreshLibraryDisplay()
     {

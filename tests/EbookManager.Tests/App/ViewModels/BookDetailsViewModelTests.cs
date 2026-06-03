@@ -21,6 +21,32 @@ public sealed class BookDetailsViewModelTests
     }
 
     [Fact]
+    public void Loading_a_book_with_metadata_whitespace_does_not_set_dirty_state()
+    {
+        var viewModel = CreateViewModel(out _);
+        var now = DateTimeOffset.UtcNow;
+        var book = new Book(
+            Guid.NewGuid(),
+            new BookMetadata(
+                " Original ",
+                [" First Author "],
+                Description: " Description ",
+                Language: " en ",
+                Publisher: " Publisher ",
+                Tags: [" Tag "],
+                Series: " Series ",
+                Isbn: " 9780000000000 "),
+            ReadingStatus.Unread,
+            null,
+            now,
+            now);
+
+        viewModel.Load(book);
+
+        viewModel.HasUnsavedChanges.Should().BeFalse();
+    }
+
+    [Fact]
     public void Editing_metadata_sets_dirty_state_and_undo_restores_original_values()
     {
         var viewModel = CreateViewModel(out _);

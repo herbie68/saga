@@ -30,6 +30,20 @@ public sealed class LibraryViewModelTests
     }
 
     [Fact]
+    public async Task First_refresh_applies_default_view_from_settings()
+    {
+        var settingsStore = new InMemoryAppSettingsStore();
+        await settingsStore.SaveAsync(
+            settingsStore.Settings with { DefaultView = nameof(LibraryView.Bookshelf) },
+            default);
+        var viewModel = CreateViewModel([], settingsStore: settingsStore);
+
+        await viewModel.RefreshAsync();
+
+        viewModel.SelectedView.Should().Be(LibraryView.Bookshelf);
+    }
+
+    [Fact]
     public async Task SearchText_is_exposed_on_visible_rows_for_highlighting()
     {
         var book = CreateBook("The Hobbit", ["Tolkien"]);
@@ -220,7 +234,8 @@ public sealed class LibraryViewModelTests
         IUserInteractionService? userInteraction = null,
         LibraryService? libraryService = null,
         CurrentLibrary? currentLibrary = null,
-        ILibraryDatabaseInitializer? databaseInitializer = null)
+        ILibraryDatabaseInitializer? databaseInitializer = null,
+        IAppSettingsStore? settingsStore = null)
     {
         var repository = new StaticBookRepository(books);
         var details = new BookDetailsViewModel(new BookService(
@@ -234,7 +249,8 @@ public sealed class LibraryViewModelTests
             userInteraction ?? new ScriptedUserInteractionService(),
             libraryService: libraryService,
             currentLibrary: currentLibrary,
-            databaseInitializer: databaseInitializer);
+            databaseInitializer: databaseInitializer,
+            settingsStore: settingsStore);
     }
 
     private static Book CreateBook(

@@ -238,8 +238,25 @@ public sealed partial class BookDetailsViewModel(BookService bookService) : Obse
     }
 
     private static bool BooksEquivalentForEditing(Book first, Book second) =>
-        first.Metadata == second.Metadata &&
+        NormalizeForEditing(first).Metadata == NormalizeForEditing(second).Metadata &&
         first.ReadingStatus == second.ReadingStatus;
+
+    private static Book NormalizeForEditing(Book book) =>
+        book with
+        {
+            Metadata = new BookMetadata(
+                book.Metadata.Title.Trim(),
+                SplitList(JoinList(book.Metadata.Authors)),
+                NormalizeBlank(book.Metadata.Description),
+                NormalizeBlank(book.Metadata.Language),
+                NormalizeBlank(book.Metadata.Publisher),
+                book.Metadata.PublicationDate,
+                SplitNullableList(book.Metadata.Tags is null ? null : JoinList(book.Metadata.Tags)),
+                NormalizeBlank(book.Metadata.Series),
+                book.Metadata.SeriesNumber,
+                NormalizeBlank(book.Metadata.Isbn),
+                book.Metadata.CoverBytes)
+        };
 
     private static string JoinList(IReadOnlyList<string> values) => string.Join("; ", values);
 
