@@ -1,6 +1,10 @@
 <UserControl x:Class="EbookManager.App.Views.BookshelfView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:EbookManager.App.Converters">
+  <UserControl.Resources>
+    <converters:ByteArrayToImageSourceConverter x:Key="ByteArrayToImageSourceConverter" />
+  </UserControl.Resources>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <ListBox ItemsSource="{Binding VisibleBooks}"
              SelectedItem="{Binding SelectedBook, Mode=TwoWay}"
@@ -23,10 +27,14 @@
                       Background="#FFE2E8F0"
                       CornerRadius="10"
                       Margin="0,0,0,10">
-                <TextBlock Text="Cover"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <Grid>
+                  <TextBlock Text="Cover"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <Image Source="{Binding CoverBytes, Converter={StaticResource ByteArrayToImageSourceConverter}}"
+                         Stretch="UniformToFill" />
+                </Grid>
               </Border>
               <TextBlock Text="{Binding Title}"
                          FontWeight="SemiBold"

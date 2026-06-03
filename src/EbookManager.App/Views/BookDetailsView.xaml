@@ -1,7 +1,11 @@
 <UserControl x:Class="EbookManager.App.Views.BookDetailsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:books="clr-namespace:EbookManager.Domain.Books;assembly=EbookManager.Domain">
+             xmlns:books="clr-namespace:EbookManager.Domain.Books;assembly=EbookManager.Domain"
+             xmlns:converters="clr-namespace:EbookManager.App.Converters">
+  <UserControl.Resources>
+    <converters:ByteArrayToImageSourceConverter x:Key="ByteArrayToImageSourceConverter" />
+  </UserControl.Resources>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="16">
       <Border Background="#FFFFF3CD"
@@ -35,6 +39,20 @@
                 Command="{Binding DeleteCommand}"
                 MinWidth="70" />
       </StackPanel>
+
+      <Border Height="220"
+              Background="#FFE2E8F0"
+              CornerRadius="12"
+              Margin="0,0,0,14">
+        <Grid>
+          <TextBlock Text="Cover"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+          <Image Source="{Binding CoverBytes, Converter={StaticResource ByteArrayToImageSourceConverter}}"
+                 Stretch="Uniform" />
+        </Grid>
+      </Border>
 
       <TextBlock Text="Title" FontWeight="SemiBold" />
       <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,10" />
