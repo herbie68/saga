@@ -76,7 +76,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<DeleteConfirmationService>();
         services.AddSingleton<IUserInteractionService, UserInteractionService>();
         services.AddSingleton<DirectoryScanner>();
-        services.AddSingleton<Sha256FileHasher>();
+        services.AddSingleton<IFileHasher, Sha256FileHasher>();
         services.AddSingleton<IImportExceptionClassifier, SqliteImportExceptionClassifier>();
         services.AddSingleton<IMetadataAdapter, FallbackMetadataAdapter>();
         services.AddSingleton<IMetadataAdapter, EpubMetadataAdapter>();
@@ -93,7 +93,12 @@ public partial class App : System.Windows.Application
         services.AddTransient<SettingsViewModel>();
         services.AddSingleton<MainWindow>();
 
-        return services.BuildServiceProvider();
+        return services.BuildServiceProvider(
+            new ServiceProviderOptions
+            {
+                ValidateOnBuild = true,
+                ValidateScopes = true
+            });
     }
 
     private static void RegisterSyncfusionLicense()
