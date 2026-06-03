@@ -1,7 +1,8 @@
 <Window x:Class="EbookManager.App.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Settings"
+        xmlns:loc="clr-namespace:EbookManager.App.Localization"
+        Title="{loc:Loc Settings}"
         Width="460"
         Height="400"
         WindowStartupLocation="CenterOwner">
@@ -20,33 +21,33 @@
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <TextBlock Text="Language" Grid.Row="0" FontWeight="SemiBold" Margin="0,0,12,12" />
+    <TextBlock Text="{loc:Loc Culture}" Grid.Row="0" FontWeight="SemiBold" Margin="0,0,12,12" />
     <ComboBox Grid.Row="0" Grid.Column="1" SelectedValue="{Binding Culture}" SelectedValuePath="Tag" Margin="0,0,0,12">
       <ComboBoxItem Content="English (US)" Tag="en-US" />
       <ComboBoxItem Content="Nederlands" Tag="nl-NL" />
     </ComboBox>
 
-    <TextBlock Text="Theme" Grid.Row="1" FontWeight="SemiBold" Margin="0,0,12,12" />
+    <TextBlock Text="{loc:Loc Theme}" Grid.Row="1" FontWeight="SemiBold" Margin="0,0,12,12" />
     <ComboBox Grid.Row="1"
               Grid.Column="1"
               ItemsSource="{Binding SelectableThemes}"
               SelectedItem="{Binding Theme}"
               Margin="0,0,0,12" />
 
-    <TextBlock Text="Default view" Grid.Row="2" FontWeight="SemiBold" Margin="0,0,12,12" />
-    <ComboBox Grid.Row="2" Grid.Column="1" SelectedValue="{Binding DefaultView}" SelectedValuePath="Content" Margin="0,0,0,12">
-      <ComboBoxItem Content="Bookshelf" />
-      <ComboBoxItem Content="Detailed" />
-      <ComboBoxItem Content="List" />
+    <TextBlock Text="{loc:Loc DefaultView}" Grid.Row="2" FontWeight="SemiBold" Margin="0,0,12,12" />
+    <ComboBox Grid.Row="2" Grid.Column="1" SelectedValue="{Binding DefaultView}" SelectedValuePath="Tag" Margin="0,0,0,12">
+      <ComboBoxItem Content="{loc:Loc BookshelfView}" Tag="Bookshelf" />
+      <ComboBoxItem Content="{loc:Loc DetailedView}" Tag="Detailed" />
+      <ComboBoxItem Content="{loc:Loc ListView}" Tag="List" />
     </ComboBox>
 
     <CheckBox Grid.Row="3" Grid.ColumnSpan="2"
-              Content="Ask before deleting books"
+              Content="{loc:Loc ConfirmDeleteSetting}"
               IsChecked="{Binding ConfirmDelete}"
               Margin="0,0,0,12" />
 
     <CheckBox Grid.Row="4" Grid.ColumnSpan="2"
-              Content="Include subdirectories when scanning"
+              Content="{loc:Loc IncludeScanSubdirectoriesSetting}"
               IsChecked="{Binding IncludeScanSubdirectories}"
               Margin="0,0,0,12" />
 
@@ -54,8 +55,8 @@
                 Grid.ColumnSpan="2"
                 Orientation="Horizontal"
                 HorizontalAlignment="Right">
-      <Button Content="Save" MinWidth="90" Margin="0,0,8,0" Click="SaveClicked" />
-      <Button Content="Cancel" MinWidth="90" Click="CancelClicked" />
+      <Button Content="{loc:Loc Save}" MinWidth="90" Margin="0,0,8,0" Click="SaveClicked" />
+      <Button Content="{loc:Loc Cancel}" MinWidth="90" Click="CancelClicked" />
     </StackPanel>
   </Grid>
 </Window>

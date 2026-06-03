@@ -5,12 +5,16 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="AddBooks" xml:space="preserve"><value>Boeken toevoegen</value></data>
+  <data name="AppName" xml:space="preserve"><value>Ebook Manager</value></data>
   <data name="AppVersion" xml:space="preserve"><value>Versie</value></data>
   <data name="Authors" xml:space="preserve"><value>Auteurs</value></data>
   <data name="BookCount" xml:space="preserve"><value>Boeken</value></data>
   <data name="BookshelfView" xml:space="preserve"><value>Boekenplank</value></data>
   <data name="Cancel" xml:space="preserve"><value>Annuleren</value></data>
+  <data name="Close" xml:space="preserve"><value>Sluiten</value></data>
   <data name="ConfirmDeleteSetting" xml:space="preserve"><value>Vragen voordat boeken worden verwijderd</value></data>
+  <data name="Cover" xml:space="preserve"><value>Omslag</value></data>
+  <data name="CreateLibraryTooltip" xml:space="preserve"><value>Maak een nieuwe bibliotheek</value></data>
   <data name="CreateLibrary" xml:space="preserve"><value>Nieuwe bibliotheek</value></data>
   <data name="Culture" xml:space="preserve"><value>Taal</value></data>
   <data name="DefaultView" xml:space="preserve"><value>Standaardweergave</value></data>
@@ -22,27 +26,45 @@
   <data name="EReader" xml:space="preserve"><value>E-reader</value></data>
   <data name="EReaderUnavailable" xml:space="preserve"><value>Niet beschikbaar</value></data>
   <data name="Failed" xml:space="preserve"><value>Mislukt</value></data>
+  <data name="File" xml:space="preserve"><value>Bestand</value></data>
+  <data name="FilterHelp" xml:space="preserve"><value>Filters zijn gebaseerd op metadata die tijdens import is gevonden.</value></data>
+  <data name="Filters" xml:space="preserve"><value>Filters</value></data>
   <data name="ImportAdded" xml:space="preserve"><value>Toegevoegd</value></data>
+  <data name="ImportDuplicates" xml:space="preserve"><value>Duplicaten</value></data>
   <data name="ImportExactDuplicate" xml:space="preserve"><value>Exact duplicaat</value></data>
   <data name="ImportFailed" xml:space="preserve"><value>Mislukt</value></data>
   <data name="ImportPossibleDuplicate" xml:space="preserve"><value>Mogelijk duplicaat</value></data>
+  <data name="ImportPossibleShort" xml:space="preserve"><value>Mogelijk</value></data>
   <data name="ImportResults" xml:space="preserve"><value>Importresultaten</value></data>
+  <data name="ImportTotal" xml:space="preserve"><value>Totaal</value></data>
+  <data name="IncludeScanSubdirectoriesSetting" xml:space="preserve"><value>Submappen meenemen bij scannen</value></data>
   <data name="Isbn" xml:space="preserve"><value>ISBN</value></data>
   <data name="Language" xml:space="preserve"><value>Taal</value></data>
   <data name="ListView" xml:space="preserve"><value>Lijst</value></data>
+  <data name="Message" xml:space="preserve"><value>Melding</value></data>
+  <data name="NoSort" xml:space="preserve"><value>Geen</value></data>
+  <data name="OpenLibraryTooltip" xml:space="preserve"><value>Open een bestaande bibliotheek</value></data>
   <data name="OpenLibrary" xml:space="preserve"><value>Bibliotheek openen</value></data>
+  <data name="OpenSettingsTooltip" xml:space="preserve"><value>Open instellingen</value></data>
+  <data name="Outcome" xml:space="preserve"><value>Resultaat</value></data>
   <data name="PublicationDate" xml:space="preserve"><value>Publicatiedatum</value></data>
   <data name="Publisher" xml:space="preserve"><value>Uitgever</value></data>
   <data name="Reading" xml:space="preserve"><value>Aan het lezen</value></data>
   <data name="Read" xml:space="preserve"><value>Gelezen</value></data>
   <data name="RememberAnswer" xml:space="preserve"><value>Mijn antwoord onthouden</value></data>
   <data name="Save" xml:space="preserve"><value>Opslaan</value></data>
+  <data name="Scan" xml:space="preserve"><value>Scannen</value></data>
   <data name="ScanFolder" xml:space="preserve"><value>Map scannen</value></data>
+  <data name="ScanFolderTooltip" xml:space="preserve"><value>Scan een map</value></data>
   <data name="ScanSubdirectories" xml:space="preserve"><value>Submappen meenemen</value></data>
+  <data name="SearchAllFields" xml:space="preserve"><value>Zoeken in alle velden</value></data>
   <data name="SearchPlaceholder" xml:space="preserve"><value>Zoeken in alle velden...</value></data>
   <data name="Series" xml:space="preserve"><value>Serie</value></data>
   <data name="SeriesNumber" xml:space="preserve"><value>Serienummer</value></data>
   <data name="Settings" xml:space="preserve"><value>Instellingen</value></data>
+  <data name="SortBy" xml:space="preserve"><value>Sorteren op</value></data>
+  <data name="SortLibraryTooltip" xml:space="preserve"><value>Sorteer de huidige bibliotheekweergave</value></data>
+  <data name="StartupFailedTitle" xml:space="preserve"><value>Opstarten van Ebook Manager mislukt</value></data>
   <data name="Status" xml:space="preserve"><value>Status</value></data>
   <data name="Tags" xml:space="preserve"><value>Tags</value></data>
   <data name="Theme" xml:space="preserve"><value>Thema</value></data>

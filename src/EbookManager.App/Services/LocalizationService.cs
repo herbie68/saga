@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Resources;
+using EbookManager.App.Localization;
 using EbookManager.Domain.Abstractions;
 
 namespace EbookManager.App.Services;
@@ -38,6 +39,7 @@ public sealed class LocalizationService(IAppSettingsStore settingsStore)
 
         CultureInfo.CurrentCulture = culture;
         CultureInfo.CurrentUICulture = culture;
+        LocalizedStrings.Current.Refresh();
     }
 
     public string GetString(string key) =>

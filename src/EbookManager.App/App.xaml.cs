@@ -47,7 +47,8 @@ public partial class App : System.Windows.Application
         {
             System.Windows.MessageBox.Show(
                 exception.Message,
-                "Ebook Manager startup failed",
+                serviceProvider?.GetService<LocalizationService>()?.GetString("StartupFailedTitle")
+                    ?? "Ebook Manager startup failed",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Error);
             Shutdown(-1);

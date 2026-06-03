@@ -1,14 +1,15 @@
 <Window x:Class="EbookManager.App.Views.ImportResultWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Import results"
+        xmlns:loc="clr-namespace:EbookManager.App.Localization"
+        Title="{loc:Loc ImportResults}"
         Width="880"
         Height="560"
         WindowStartupLocation="CenterOwner">
   <DockPanel Margin="18">
     <StackPanel DockPanel.Dock="Top"
                 Margin="0,0,0,14">
-      <TextBlock Text="Import results"
+      <TextBlock Text="{loc:Loc ImportResults}"
                  FontSize="20"
                  FontWeight="SemiBold"
                  Foreground="{DynamicResource TextPrimaryBrush}" />
@@ -19,36 +20,36 @@
         <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="10" Padding="10" Margin="0,0,8,0">
           <StackPanel>
             <TextBlock Text="{Binding TotalCount}" FontSize="18" FontWeight="SemiBold" />
-            <TextBlock Text="Total" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Text="{loc:Loc ImportTotal}" Foreground="{DynamicResource TextSecondaryBrush}" />
           </StackPanel>
         </Border>
         <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="10" Padding="10" Margin="0,0,8,0">
           <StackPanel>
             <TextBlock Text="{Binding AddedCount}" FontSize="18" FontWeight="SemiBold" />
-            <TextBlock Text="Added" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Text="{loc:Loc ImportAdded}" Foreground="{DynamicResource TextSecondaryBrush}" />
           </StackPanel>
         </Border>
         <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="10" Padding="10" Margin="0,0,8,0">
           <StackPanel>
             <TextBlock Text="{Binding ExactDuplicateCount}" FontSize="18" FontWeight="SemiBold" />
-            <TextBlock Text="Duplicates" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Text="{loc:Loc ImportDuplicates}" Foreground="{DynamicResource TextSecondaryBrush}" />
           </StackPanel>
         </Border>
         <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="10" Padding="10" Margin="0,0,8,0">
           <StackPanel>
             <TextBlock Text="{Binding PossibleDuplicateCount}" FontSize="18" FontWeight="SemiBold" />
-            <TextBlock Text="Possible" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Text="{loc:Loc ImportPossibleShort}" Foreground="{DynamicResource TextSecondaryBrush}" />
           </StackPanel>
         </Border>
         <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="10" Padding="10">
           <StackPanel>
             <TextBlock Text="{Binding FailedCount}" FontSize="18" FontWeight="SemiBold" />
-            <TextBlock Text="Failed" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Text="{loc:Loc Failed}" Foreground="{DynamicResource TextSecondaryBrush}" />
           </StackPanel>
         </Border>
       </UniformGrid>
     </StackPanel>
-    <Button Content="Close"
+    <Button Content="{loc:Loc Close}"
             DockPanel.Dock="Bottom"
             HorizontalAlignment="Right"
             MinWidth="90"
@@ -60,7 +61,7 @@
               GridLinesVisibility="Horizontal"
               HeadersVisibility="Column">
       <DataGrid.Columns>
-        <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="220">
+        <DataGridTextColumn Header="{loc:Loc File}" Binding="{Binding FileName}" Width="220">
           <DataGridTextColumn.ElementStyle>
             <Style TargetType="TextBlock">
               <Setter Property="ToolTip" Value="{Binding SourcePath}" />
@@ -68,8 +69,8 @@
             </Style>
           </DataGridTextColumn.ElementStyle>
         </DataGridTextColumn>
-        <DataGridTextColumn Header="Outcome" Binding="{Binding OutcomeLabel}" Width="160" />
-        <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2*" />
+        <DataGridTextColumn Header="{loc:Loc Outcome}" Binding="{Binding OutcomeLabel}" Width="160" />
+        <DataGridTextColumn Header="{loc:Loc Message}" Binding="{Binding Message}" Width="2*" />
       </DataGrid.Columns>
     </DataGrid>
   </DockPanel>

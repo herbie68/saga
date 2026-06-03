@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:EbookManager.App.Controls"
              xmlns:converters="clr-namespace:EbookManager.App.Converters"
+             xmlns:loc="clr-namespace:EbookManager.App.Localization"
              AllowDrop="True">
   <UserControl.Resources>
     <converters:ByteArrayToImageSourceConverter x:Key="ByteArrayToImageSourceConverter" />
@@ -32,7 +33,7 @@
                       CornerRadius="10"
                       Margin="0,0,0,10">
                 <Grid>
-                  <TextBlock Text="Cover"
+                  <TextBlock Text="{loc:Loc Cover}"
                              HorizontalAlignment="Center"
                              VerticalAlignment="Center"
                              Foreground="{DynamicResource TextSecondaryBrush}" />

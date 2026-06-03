@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:EbookManager.App.Controls"
              xmlns:converters="clr-namespace:EbookManager.App.Converters"
+             xmlns:loc="clr-namespace:EbookManager.App.Localization"
              xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
              AllowDrop="True">
   <UserControl.Resources>
@@ -19,7 +20,7 @@
                          RowHeight="42"
                          AllowDrop="True">
     <syncfusion:SfDataGrid.Columns>
-      <syncfusion:GridTemplateColumn HeaderText="Cover"
+      <syncfusion:GridTemplateColumn HeaderText="{loc:Loc Cover}"
                                      MappingName="CoverBytes"
                                      Width="80">
         <syncfusion:GridTemplateColumn.CellTemplate>
@@ -36,7 +37,7 @@
           </DataTemplate>
         </syncfusion:GridTemplateColumn.CellTemplate>
       </syncfusion:GridTemplateColumn>
-      <syncfusion:GridTemplateColumn HeaderText="Title"
+      <syncfusion:GridTemplateColumn HeaderText="{loc:Loc Title}"
                                      MappingName="Title"
                                      Width="220">
         <syncfusion:GridTemplateColumn.CellTemplate>
@@ -48,7 +49,7 @@
           </DataTemplate>
         </syncfusion:GridTemplateColumn.CellTemplate>
       </syncfusion:GridTemplateColumn>
-      <syncfusion:GridTemplateColumn HeaderText="Authors"
+      <syncfusion:GridTemplateColumn HeaderText="{loc:Loc Authors}"
                                      MappingName="Authors"
                                      Width="220">
         <syncfusion:GridTemplateColumn.CellTemplate>
@@ -60,7 +61,7 @@
           </DataTemplate>
         </syncfusion:GridTemplateColumn.CellTemplate>
       </syncfusion:GridTemplateColumn>
-      <syncfusion:GridTemplateColumn HeaderText="Status"
+      <syncfusion:GridTemplateColumn HeaderText="{loc:Loc Status}"
                                      MappingName="ReadingStatus"
                                      Width="120">
         <syncfusion:GridTemplateColumn.CellTemplate>
@@ -72,7 +73,7 @@
           </DataTemplate>
         </syncfusion:GridTemplateColumn.CellTemplate>
       </syncfusion:GridTemplateColumn>
-      <syncfusion:GridTemplateColumn HeaderText="E-reader"
+      <syncfusion:GridTemplateColumn HeaderText="{loc:Loc EReader}"
                                      MappingName="EReader"
                                      Width="120">
         <syncfusion:GridTemplateColumn.CellTemplate>
