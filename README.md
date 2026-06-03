@@ -64,10 +64,11 @@ Milestone 1 recognizes:
 Metadata extraction is intentionally conservative:
 
 - EPUB and KEPUB: OPF metadata and embedded cover where available
+- EPUB and KEPUB: `dc:subject` tags and Calibre-style series metadata where available
 - CBZ: first supported image as cover, filename fallback for title/author
 - PDF, CBR, MOBI, AZW, AZW3, and KFX: safe import with filename fallback
 
-SQLite is authoritative for metadata. Format write-back currently reports adapter outcomes and remains unsupported until format-specific write-back is proven safe.
+SQLite is authoritative for metadata inside the application. Metadata edits are also written to a portable `metadata.json` sidecar file next to the managed book file. On import, a sibling `metadata.json` is preferred over embedded metadata so corrected metadata can travel with a copied book directory. Native write-back into ebook files remains a later opt-in feature per format, starting with EPUB only after representative safety tests.
 
 ## Manual Verification
 
@@ -78,15 +79,16 @@ Use [docs/manual-tests/milestone-1-checklist.md](docs/manual-tests/milestone-1-c
 Milestone 2 extends the desktop app with:
 
 - drag-and-drop import
-- faceted filters in the left action list
+- faceted sorting and filters in the left action list
 - search-term highlighting
 - refined import result summaries
 - extra themes beyond light/dark
+- portable `metadata.json` sidecar metadata
 
 The following remain later-version candidates:
 
 - active e-reader detection and USB sync
-- metadata write-back into ebook files
+- native metadata write-back into ebook files
 - custom metadata fields
 - user-defined views
 - ebook conversion

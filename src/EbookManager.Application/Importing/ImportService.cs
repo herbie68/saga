@@ -11,7 +11,8 @@ public sealed class ImportService(
     ILibraryFileStore fileStore,
     IFileHasher hasher,
     IMetadataAdapterResolver metadataAdapterResolver,
-    IImportExceptionClassifier exceptionClassifier)
+    IImportExceptionClassifier exceptionClassifier,
+    IMetadataSidecarStore? metadataSidecarStore = null)
 {
     private const string InvalidSourceDisplayName = "(invalid source)";
 
@@ -21,6 +22,7 @@ public sealed class ImportService(
     private readonly IFileHasher hasher = hasher;
     private readonly IMetadataAdapterResolver metadataAdapterResolver = metadataAdapterResolver;
     private readonly IImportExceptionClassifier exceptionClassifier = exceptionClassifier;
+    private readonly IMetadataSidecarStore? metadataSidecarStore = metadataSidecarStore;
 
     public async Task<ImportBatchResult> ImportAsync(
         IReadOnlyList<string> sourcePaths,
@@ -109,6 +111,13 @@ public sealed class ImportService(
                 try
                 {
                     metadata = await metadataAdapterResolver.Resolve(format).ReadAsync(sourcePath!, format, cancellationToken);
+                    var sidecarMetadata = metadataSidecarStore is null
+                        ? null
+                        : await metadataSidecarStore.TryReadAsync(sourcePath!, cancellationToken);
+                    if (sidecarMetadata is not null)
+                    {
+                        metadata = metadata with { Metadata = sidecarMetadata };
+                    }
                 }
                 catch (OperationCanceledException)
                 {

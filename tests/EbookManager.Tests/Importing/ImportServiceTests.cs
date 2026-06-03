@@ -48,6 +48,34 @@ public sealed class ImportServiceTests
     }
 
     [Fact]
+    public async Task Import_async_prefers_sidecar_metadata_when_available_next_to_source_file()
+    {
+        await using var fixture = await ImportServiceFixture.CreateAsync();
+        var sidecars = new ReturningMetadataSidecarStore(
+            new BookMetadata("Corrected Title", ["Corrected Author"], Tags: ["Imported tag"]));
+        var service = new ImportService(
+            fixture.BookRepository,
+            fixture.ImportRepository,
+            fixture.FileStore,
+            fixture.FileHasher,
+            fixture.MetadataAdapterResolver,
+            fixture.ExceptionClassifier,
+            sidecars);
+        var source = fixture.WriteBytesFile(
+            @"incoming\Wrong Title - Wrong Author.pdf",
+            Encoding.UTF8.GetBytes("sidecar-import"));
+
+        var result = await service.ImportAsync([source], default);
+
+        var bookId = result.Items.Single().BookId!.Value;
+        var book = await fixture.BookRepository.GetAsync(bookId, default);
+        book!.Metadata.Title.Should().Be("Corrected Title");
+        book.Metadata.Authors.Should().Equal("Corrected Author");
+        book.Metadata.Tags.Should().Equal("Imported tag");
+        sidecars.ReadPaths.Should().Equal(source);
+    }
+
+    [Fact]
     public async Task Import_async_skips_exact_duplicates_without_copying_them()
     {
         await using var fixture = await ImportServiceFixture.CreateAsync();
@@ -734,5 +762,19 @@ public sealed class ImportServiceTests
     private sealed class DuplicateKeyRaceClassifier : IImportExceptionClassifier
     {
         public bool IsDuplicateKeyViolation(Exception exception) => exception is DuplicateKeyRaceException;
+    }
+
+    private sealed class ReturningMetadataSidecarStore(BookMetadata metadata) : IMetadataSidecarStore
+    {
+        public List<string> ReadPaths { get; } = [];
+
+        public Task<BookMetadata?> TryReadAsync(string bookFilePath, CancellationToken cancellationToken)
+        {
+            ReadPaths.Add(bookFilePath);
+            return Task.FromResult<BookMetadata?>(metadata);
+        }
+
+        public Task WriteAsync(string bookFilePath, BookMetadata metadata, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

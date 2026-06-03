@@ -49,7 +49,7 @@ The second milestone adds:
 - Search match highlighting in displayed metadata.
 - A refined import result view.
 - Sepia, blue, and red themes in addition to light and dark.
-- Improved metadata extraction and write-back adapters using representative test files.
+- Improved metadata extraction and safe portable metadata sidecars using representative test files.
 
 ### 2.3 Deferred Features
 
@@ -115,9 +115,12 @@ My Library/
     <book-id>/
       book.epub
       cover.jpg
+      metadata.json
 ```
 
 A book can have one or more managed files when different formats are associated with the same book record. All imported files are copied into the selected library. Original source files remain untouched.
+
+SQLite is authoritative for the active library. Each managed book directory also stores a portable `metadata.json` sidecar containing editable metadata such as title, authors, description, tags, series, series number, language, publisher, publication date, and ISBN. The sidecar exists so corrected metadata can travel with a copied book directory and be reused during import into another library without modifying the ebook file itself.
 
 Global application settings are stored in the platform-local application data directory rather than inside a library. They include:
 
@@ -183,11 +186,12 @@ For each input file:
 2. Compute a SHA-256 hash.
 3. Skip the file automatically when the same hash already exists in the current library.
 4. Read metadata and cover data through a format-specific metadata adapter.
-5. Fall back to filename-derived title and author data when embedded metadata is unavailable.
-6. Report a possible duplicate when normalized title and author match an existing book but the file hash differs.
-7. Copy the managed file into `books/<book-id>/`.
-8. Store metadata, cover path, and file details in SQLite.
-9. Add the outcome to the import result.
+5. Prefer a sibling `metadata.json` sidecar over embedded metadata when present and valid.
+6. Fall back to filename-derived title and author data when embedded metadata is unavailable.
+7. Report a possible duplicate when normalized title and author match an existing book but the file hash differs.
+8. Copy the managed file into `books/<book-id>/`.
+9. Store metadata, cover path, and file details in SQLite.
+10. Add the outcome to the import result.
 
 Possible duplicates are reported for human review but are not imported automatically in `0.1`. A future workflow can allow the user to merge or import them deliberately.
 
@@ -214,11 +218,11 @@ The details panel shows and edits:
 
 The editor works on a viewmodel copy of the selected record. Any changed value causes a visible unsaved-changes notice to appear at the top of the details panel.
 
-- `Save` persists the changes to SQLite, then attempts metadata write-back for each managed ebook file where the adapter supports reliable write-back.
+- `Save` persists the changes to SQLite, writes a portable `metadata.json` sidecar next to the managed book file, then attempts native metadata write-back only for formats where the adapter supports reliable write-back.
 - `Undo` restores the values loaded at the start of the current edit session.
 - `Delete` removes the book from the database and deletes its managed `books/<book-id>/` directory.
 
-SQLite is authoritative. Metadata file write-back is best effort. A write-back failure does not roll back the saved SQLite changes and is shown clearly to the user. Unsupported write-back is also represented explicitly rather than treated as a failure.
+SQLite is authoritative. The sidecar file is the safe portable write-back layer. Native metadata write-back into ebook files is best effort, optional per format, and must not roll back saved SQLite changes. Unsupported native write-back is represented explicitly rather than treated as a failure.
 
 ## 9. User Interface
 

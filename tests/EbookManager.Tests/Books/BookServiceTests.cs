@@ -117,6 +117,45 @@ public sealed class BookServiceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Save_writes_one_sidecar_metadata_file_per_book_directory()
+    {
+        var libraryRoot = temporaryDirectory.CreateSubdirectory("Library").FullName;
+        var bookId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var updatedBook = new Book(
+            bookId,
+            new BookMetadata("Corrected Title", ["Corrected Author"], Tags: ["Thriller"]),
+            ReadingStatus.Read,
+            null,
+            now,
+            now);
+        var firstFile = CreateBookFile(bookId, "books", "book.epub", EbookFormat.Epub);
+        var secondFile = CreateBookFile(bookId, "books", "book.pdf", EbookFormat.Pdf);
+        var repo = new InMemoryBookRepository(updatedBook, [firstFile, secondFile]);
+        var bookDirectory = Path.Combine(libraryRoot, "books", bookId.ToString("N"));
+        Directory.CreateDirectory(bookDirectory);
+        File.WriteAllText(Path.Combine(bookDirectory, "book.epub"), "epub");
+        File.WriteAllText(Path.Combine(bookDirectory, "book.pdf"), "pdf");
+        var sidecars = new RecordingMetadataSidecarStore();
+        var service = new BookService(
+            repo,
+            new ManagedLibraryFileStore(libraryRoot),
+            new DictionaryMetadataAdapterResolver(new Dictionary<EbookFormat, IMetadataAdapter>
+            {
+                [EbookFormat.Epub] = new CapturingMetadataAdapter(Path.Combine(bookDirectory, "book.epub"), MetadataWriteBackStatus.Unsupported),
+                [EbookFormat.Pdf] = new CapturingMetadataAdapter(Path.Combine(bookDirectory, "book.pdf"), MetadataWriteBackStatus.Unsupported)
+            }),
+            sidecars);
+
+        var result = await service.SaveAsync(updatedBook, default);
+
+        result.Status.Should().Be(BookSaveStatus.Succeeded);
+        sidecars.Writes.Should().ContainSingle();
+        sidecars.Writes.Single().BookFilePath.Should().Be(Path.GetFullPath(Path.Combine(bookDirectory, "book.epub")));
+        sidecars.Writes.Single().Metadata.Should().Be(updatedBook.Metadata);
+    }
+
+    [Fact]
     public async Task Save_returns_conflict_when_the_repository_rejects_duplicate_metadata()
     {
         var repo = new InMemoryBookRepository();
@@ -410,5 +449,19 @@ public sealed class BookServiceTests : IAsyncLifetime
 
         public Task DeleteBookDirectoryAsync(Guid bookId, CancellationToken cancellationToken) =>
             throw new IOException("cleanup failed");
+    }
+
+    private sealed class RecordingMetadataSidecarStore : IMetadataSidecarStore
+    {
+        public List<(string BookFilePath, BookMetadata Metadata)> Writes { get; } = [];
+
+        public Task<BookMetadata?> TryReadAsync(string bookFilePath, CancellationToken cancellationToken) =>
+            Task.FromResult<BookMetadata?>(null);
+
+        public Task WriteAsync(string bookFilePath, BookMetadata metadata, CancellationToken cancellationToken)
+        {
+            Writes.Add((bookFilePath, metadata));
+            return Task.CompletedTask;
+        }
     }
 }

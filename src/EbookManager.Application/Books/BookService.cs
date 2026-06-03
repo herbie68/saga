@@ -7,11 +7,13 @@ namespace EbookManager.Application.Books;
 public sealed class BookService(
     IBookRepository bookRepository,
     ILibraryFileStore fileStore,
-    IMetadataAdapterResolver metadataAdapterResolver)
+    IMetadataAdapterResolver metadataAdapterResolver,
+    IMetadataSidecarStore? metadataSidecarStore = null)
 {
     private readonly IBookRepository bookRepository = bookRepository;
     private readonly ILibraryFileStore fileStore = fileStore;
     private readonly IMetadataAdapterResolver metadataAdapterResolver = metadataAdapterResolver;
+    private readonly IMetadataSidecarStore? metadataSidecarStore = metadataSidecarStore;
 
     public async Task<BookSaveResult> SaveAsync(Book book, CancellationToken cancellationToken = default)
     {
@@ -40,6 +42,7 @@ public sealed class BookService(
         try
         {
             var files = await bookRepository.ListFilesAsync(book.Id, cancellationToken);
+            await WriteSidecarMetadataAsync(book, files, cancellationToken);
 
             foreach (var file in files)
             {
@@ -78,6 +81,36 @@ public sealed class BookService(
         }
 
         return new BookSaveResult(BookSaveStatus.Succeeded, fileResults);
+    }
+
+    private async Task WriteSidecarMetadataAsync(
+        Book book,
+        IReadOnlyList<BookFile> files,
+        CancellationToken cancellationToken)
+    {
+        if (metadataSidecarStore is null)
+        {
+            return;
+        }
+
+        var writtenDirectories = new HashSet<string>(
+            OperatingSystem.IsWindows()
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal);
+        foreach (var file in files)
+        {
+            var absolutePath = fileStore.GetAbsolutePath(file.RelativePath);
+            var directory = Path.GetDirectoryName(absolutePath);
+            if (directory is null || !writtenDirectories.Add(directory))
+            {
+                continue;
+            }
+
+            await metadataSidecarStore.WriteAsync(
+                absolutePath,
+                book.Metadata,
+                cancellationToken);
+        }
     }
 
     public async Task<BookDeleteResult> DeleteAsync(

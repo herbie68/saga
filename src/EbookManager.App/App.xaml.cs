@@ -77,6 +77,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IUserInteractionService, UserInteractionService>();
         services.AddSingleton<DirectoryScanner>();
         services.AddSingleton<IFileHasher, Sha256FileHasher>();
+        services.AddSingleton<IMetadataSidecarStore, JsonMetadataSidecarStore>();
         services.AddSingleton<IImportExceptionClassifier, SqliteImportExceptionClassifier>();
         services.AddSingleton<IMetadataAdapter, FallbackMetadataAdapter>();
         services.AddSingleton<IMetadataAdapter, EpubMetadataAdapter>();

@@ -274,6 +274,53 @@ public sealed class ImportPrimitivesTests : IDisposable
         after.Should().Equal(before);
     }
 
+    [Fact]
+    public async Task Json_sidecar_store_roundtrips_portable_book_metadata_next_to_book_file()
+    {
+        var bookFilePath = WriteBytesFile("Library/books/book-id/book.epub", [1, 2, 3]);
+        var metadata = new BookMetadata(
+            "Corrected Title",
+            ["Corrected Author"],
+            Description: "Corrected description",
+            Language: "nl",
+            Publisher: "Publisher",
+            PublicationDate: new DateOnly(2026, 6, 3),
+            Tags: ["Thriller", "Crime"],
+            Series: "Atlanta",
+            SeriesNumber: 1,
+            Isbn: "9780000000000",
+            CoverBytes: [9, 8, 7]);
+        var store = new JsonMetadataSidecarStore();
+
+        await store.WriteAsync(bookFilePath, metadata, default);
+        var roundtripped = await store.TryReadAsync(bookFilePath, default);
+
+        File.Exists(Path.Combine(Path.GetDirectoryName(bookFilePath)!, JsonMetadataSidecarStore.FileName))
+            .Should()
+            .BeTrue();
+        roundtripped.Should().NotBeNull();
+        roundtripped!.Title.Should().Be("Corrected Title");
+        roundtripped.Authors.Should().Equal("Corrected Author");
+        roundtripped.Tags.Should().Equal("Thriller", "Crime");
+        roundtripped.Series.Should().Be("Atlanta");
+        roundtripped.SeriesNumber.Should().Be(1);
+        roundtripped.CoverBytes.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Json_sidecar_store_ignores_malformed_sidecar_files()
+    {
+        var bookFilePath = WriteBytesFile("Library/books/malformed/book.epub", [1, 2, 3]);
+        File.WriteAllText(
+            Path.Combine(Path.GetDirectoryName(bookFilePath)!, JsonMetadataSidecarStore.FileName),
+            "{ this is not valid json");
+        var store = new JsonMetadataSidecarStore();
+
+        var result = await store.TryReadAsync(bookFilePath, default);
+
+        result.Should().BeNull();
+    }
+
     [Theory]
     [InlineData("The Hobbit - J.R.R. Tolkien.epub", "The Hobbit", "J.R.R. Tolkien")]
     [InlineData("Unknown Title.pdf", "Unknown Title", "Unknown")]
