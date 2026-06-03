@@ -76,13 +76,17 @@
             Padding="16,10"
             Background="{DynamicResource AppBackgroundBrush}">
       <DockPanel>
-        <ComboBox SelectedItem="{Binding SelectedView}"
+        <ComboBox SelectedValue="{Binding SelectedView}"
+                  SelectedValuePath="Tag"
                   Width="180"
                   Height="32"
                   DockPanel.Dock="Left">
-          <viewModels:LibraryView>Bookshelf</viewModels:LibraryView>
-          <viewModels:LibraryView>Detailed</viewModels:LibraryView>
-          <viewModels:LibraryView>List</viewModels:LibraryView>
+          <ComboBoxItem Content="{loc:Loc BookshelfView}"
+                        Tag="{x:Static viewModels:LibraryView.Bookshelf}" />
+          <ComboBoxItem Content="{loc:Loc DetailedView}"
+                        Tag="{x:Static viewModels:LibraryView.Detailed}" />
+          <ComboBoxItem Content="{loc:Loc ListView}"
+                        Tag="{x:Static viewModels:LibraryView.List}" />
         </ComboBox>
         <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                  Width="360"
