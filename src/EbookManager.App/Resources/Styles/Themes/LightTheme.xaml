@@ -7,9 +7,11 @@
   <Color x:Key="TextPrimaryColor">#182033</Color>
   <Color x:Key="TextSecondaryColor">#596273</Color>
   <Color x:Key="AccentColor">#4867E8</Color>
+  <Color x:Key="SearchHighlightColor">#FFFF8A</Color>
   <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackgroundColor}" />
   <SolidColorBrush x:Key="PanelBackgroundBrush" Color="{StaticResource PanelBackgroundColor}" />
   <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
   <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
   <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+  <SolidColorBrush x:Key="SearchHighlightBrush" Color="{StaticResource SearchHighlightColor}" />
 </ResourceDictionary>

@@ -30,6 +30,19 @@ public sealed class LibraryViewModelTests
     }
 
     [Fact]
+    public async Task SearchText_is_exposed_on_visible_rows_for_highlighting()
+    {
+        var book = CreateBook("The Hobbit", ["Tolkien"]);
+        var viewModel = CreateViewModel([book]);
+
+        await viewModel.RefreshAsync();
+        viewModel.SearchText = "hob";
+
+        viewModel.VisibleBooks.Should().ContainSingle()
+            .Which.SearchText.Should().Be("hob");
+    }
+
+    [Fact]
     public async Task Selecting_a_book_loads_details()
     {
         var book = CreateBook("Selected", ["Author"]);

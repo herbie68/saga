@@ -1,6 +1,7 @@
 <UserControl x:Class="EbookManager.App.Views.LibraryListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:EbookManager.App.Controls">
   <ListBox ItemsSource="{Binding VisibleBooks}"
            SelectedItem="{Binding SelectedBook, Mode=TwoWay}"
            BorderThickness="0"
@@ -14,18 +15,26 @@
             <ColumnDefinition Width="120" />
             <ColumnDefinition Width="120" />
           </Grid.ColumnDefinitions>
-          <TextBlock Text="{Binding Title}"
-                     FontWeight="SemiBold"
-                     Foreground="{DynamicResource TextPrimaryBrush}" />
-          <TextBlock Grid.Column="1"
-                     Text="{Binding Authors}"
-                     Foreground="{DynamicResource TextSecondaryBrush}" />
-          <TextBlock Grid.Column="2"
-                     Text="{Binding ReadingStatus}"
-                     Foreground="{DynamicResource TextSecondaryBrush}" />
-          <TextBlock Grid.Column="3"
-                     Text="{Binding EReader}"
-                     Foreground="{DynamicResource TextSecondaryBrush}" />
+          <controls:HighlightedTextBlock HighlightedText="{Binding Title}"
+                                         SearchText="{Binding SearchText}"
+                                         HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                         FontWeight="SemiBold"
+                                         Foreground="{DynamicResource TextPrimaryBrush}" />
+          <controls:HighlightedTextBlock Grid.Column="1"
+                                         HighlightedText="{Binding Authors}"
+                                         SearchText="{Binding SearchText}"
+                                         HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                         Foreground="{DynamicResource TextSecondaryBrush}" />
+          <controls:HighlightedTextBlock Grid.Column="2"
+                                         HighlightedText="{Binding ReadingStatus}"
+                                         SearchText="{Binding SearchText}"
+                                         HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                         Foreground="{DynamicResource TextSecondaryBrush}" />
+          <controls:HighlightedTextBlock Grid.Column="3"
+                                         HighlightedText="{Binding EReader}"
+                                         SearchText="{Binding SearchText}"
+                                         HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                         Foreground="{DynamicResource TextSecondaryBrush}" />
         </Grid>
       </DataTemplate>
     </ListBox.ItemTemplate>

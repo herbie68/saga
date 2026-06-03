@@ -1,6 +1,7 @@
 <UserControl x:Class="EbookManager.App.Views.BookshelfView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:EbookManager.App.Controls"
              xmlns:converters="clr-namespace:EbookManager.App.Converters"
              AllowDrop="True">
   <UserControl.Resources>
@@ -39,15 +40,19 @@
                          Stretch="UniformToFill" />
                 </Grid>
               </Border>
-              <TextBlock Text="{Binding Title}"
-                         FontWeight="SemiBold"
-                         TextWrapping="Wrap"
-                         MaxHeight="40"
-                         Foreground="{DynamicResource TextPrimaryBrush}" />
-              <TextBlock Text="{Binding Authors}"
-                         TextWrapping="Wrap"
-                         MaxHeight="40"
-                         Foreground="{DynamicResource TextSecondaryBrush}" />
+              <controls:HighlightedTextBlock HighlightedText="{Binding Title}"
+                                             SearchText="{Binding SearchText}"
+                                             HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                             FontWeight="SemiBold"
+                                             TextWrapping="Wrap"
+                                             MaxHeight="40"
+                                             Foreground="{DynamicResource TextPrimaryBrush}" />
+              <controls:HighlightedTextBlock HighlightedText="{Binding Authors}"
+                                             SearchText="{Binding SearchText}"
+                                             HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                             TextWrapping="Wrap"
+                                             MaxHeight="40"
+                                             Foreground="{DynamicResource TextSecondaryBrush}" />
             </StackPanel>
           </Border>
         </DataTemplate>

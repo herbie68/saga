@@ -206,7 +206,7 @@ public sealed partial class LibraryViewModel(
     {
         var selectedId = SelectedBook?.Id;
         var rows = searchService.Filter(books, SearchText)
-            .Select(book => new BookRowViewModel(book))
+            .Select(book => new BookRowViewModel(book, SearchText))
             .ToList();
 
         VisibleBooks.Clear();

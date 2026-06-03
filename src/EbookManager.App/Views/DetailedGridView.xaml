@@ -1,6 +1,7 @@
 <UserControl x:Class="EbookManager.App.Views.DetailedGridView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:EbookManager.App.Controls"
              xmlns:converters="clr-namespace:EbookManager.App.Converters"
              xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
              AllowDrop="True">
@@ -35,18 +36,54 @@
           </DataTemplate>
         </syncfusion:GridTemplateColumn.CellTemplate>
       </syncfusion:GridTemplateColumn>
-      <syncfusion:GridTextColumn HeaderText="Title"
-                                 MappingName="Title"
-                                 Width="220" />
-      <syncfusion:GridTextColumn HeaderText="Authors"
-                                 MappingName="Authors"
-                                 Width="220" />
-      <syncfusion:GridTextColumn HeaderText="Status"
-                                 MappingName="ReadingStatus"
-                                 Width="120" />
-      <syncfusion:GridTextColumn HeaderText="E-reader"
-                                 MappingName="EReader"
-                                 Width="120" />
+      <syncfusion:GridTemplateColumn HeaderText="Title"
+                                     MappingName="Title"
+                                     Width="220">
+        <syncfusion:GridTemplateColumn.CellTemplate>
+          <DataTemplate>
+            <controls:HighlightedTextBlock HighlightedText="{Binding Title}"
+                                           SearchText="{Binding SearchText}"
+                                           HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+          </DataTemplate>
+        </syncfusion:GridTemplateColumn.CellTemplate>
+      </syncfusion:GridTemplateColumn>
+      <syncfusion:GridTemplateColumn HeaderText="Authors"
+                                     MappingName="Authors"
+                                     Width="220">
+        <syncfusion:GridTemplateColumn.CellTemplate>
+          <DataTemplate>
+            <controls:HighlightedTextBlock HighlightedText="{Binding Authors}"
+                                           SearchText="{Binding SearchText}"
+                                           HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+          </DataTemplate>
+        </syncfusion:GridTemplateColumn.CellTemplate>
+      </syncfusion:GridTemplateColumn>
+      <syncfusion:GridTemplateColumn HeaderText="Status"
+                                     MappingName="ReadingStatus"
+                                     Width="120">
+        <syncfusion:GridTemplateColumn.CellTemplate>
+          <DataTemplate>
+            <controls:HighlightedTextBlock HighlightedText="{Binding ReadingStatus}"
+                                           SearchText="{Binding SearchText}"
+                                           HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+          </DataTemplate>
+        </syncfusion:GridTemplateColumn.CellTemplate>
+      </syncfusion:GridTemplateColumn>
+      <syncfusion:GridTemplateColumn HeaderText="E-reader"
+                                     MappingName="EReader"
+                                     Width="120">
+        <syncfusion:GridTemplateColumn.CellTemplate>
+          <DataTemplate>
+            <controls:HighlightedTextBlock HighlightedText="{Binding EReader}"
+                                           SearchText="{Binding SearchText}"
+                                           HighlightBrush="{DynamicResource SearchHighlightBrush}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+          </DataTemplate>
+        </syncfusion:GridTemplateColumn.CellTemplate>
+      </syncfusion:GridTemplateColumn>
     </syncfusion:SfDataGrid.Columns>
   </syncfusion:SfDataGrid>
 </UserControl>
