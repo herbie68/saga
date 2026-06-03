@@ -1,0 +1,38 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <GeometryGroup x:Key="NewLibraryIconGeometry">
+    <Geometry>M4 4h12a2 2 0 0 1 2 2v5h-2V6H6v13h6v2H4V4Z</Geometry>
+    <Geometry>M8 8h6v2H8V8Zm0 4h5v2H8v-2Zm10 1h2v3h3v2h-3v3h-2v-3h-3v-2h3v-3Z</Geometry>
+  </GeometryGroup>
+
+  <GeometryGroup x:Key="OpenLibraryIconGeometry">
+    <Geometry>M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3h-2V8H5v10h6v2H5a2 2 0 0 1-2-2V6Z</Geometry>
+    <Geometry>M15 13h5v-2l4 3.5-4 3.5v-2h-5v-3Z</Geometry>
+  </GeometryGroup>
+
+  <GeometryGroup x:Key="AddBookIconGeometry">
+    <Geometry>M5 3h10a3 3 0 0 1 3 3v4h-2V6a1 1 0 0 0-1-1H6v14h5v2H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z</Geometry>
+    <Geometry>M8 7h6v2H8V7Zm0 4h5v2H8v-2Zm10 3h2v3h3v2h-3v3h-2v-3h-3v-2h3v-3Z</Geometry>
+  </GeometryGroup>
+
+  <GeometryGroup x:Key="ScanFolderIconGeometry">
+    <Geometry>M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3h-2V8H5v10h6v2H5a2 2 0 0 1-2-2V6Z</Geometry>
+    <Geometry>M17 12a5 5 0 1 0 3.54 8.54l2 2 1.41-1.41-2-2A5 5 0 0 0 17 12Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z</Geometry>
+  </GeometryGroup>
+
+  <GeometryGroup x:Key="SettingsIconGeometry">
+    <Geometry>M19.4 13.5c.08-.48.08-.52.08-1s0-.52-.08-1l2.02-1.55-2-3.46-2.38.96a7.73 7.73 0 0 0-1.73-1l-.36-2.56h-4l-.36 2.56c-.62.25-1.2.58-1.73 1L6.48 6.5l-2 3.46L6.5 11.5c-.08.48-.08.52-.08 1s0 .52.08 1l-2.02 1.55 2 3.46 2.38-.96c.53.42 1.11.75 1.73 1l.36 2.56h4l.36-2.56c.62-.25 1.2-.58 1.73-1l2.38.96 2-3.46-2.02-1.55ZM13 15.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z</Geometry>
+  </GeometryGroup>
+
+  <GeometryGroup x:Key="SaveIconGeometry">
+    <Geometry>M5 3h12l2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v6h9V5H7Zm0 14h10v-6H7v6Zm2-12h5v2H9V7Z</Geometry>
+  </GeometryGroup>
+
+  <GeometryGroup x:Key="UndoIconGeometry">
+    <Geometry>M8 7V3L2 9l6 6v-4h7a4 4 0 0 1 0 8h-4v2h4a6 6 0 0 0 0-12H8Z</Geometry>
+  </GeometryGroup>
+
+  <GeometryGroup x:Key="DeleteIconGeometry">
+    <Geometry>M9 3h6l1 2h5v2H3V5h5l1-2Zm-3 6h12l-1 12H7L6 9Zm3 2v8h2v-8H9Zm4 0v8h2v-8h-2Z</Geometry>
+  </GeometryGroup>
+</ResourceDictionary>

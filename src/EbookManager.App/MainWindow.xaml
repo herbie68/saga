@@ -43,31 +43,51 @@
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     DockPanel.Dock="Right">
-          <Button Content="{loc:Loc CreateLibrary}"
-                  Command="{Binding CreateLibraryCommand}"
+          <Button Command="{Binding CreateLibraryCommand}"
                   Margin="6,12"
                   Padding="14,6"
-                  ToolTip="{loc:Loc CreateLibraryTooltip}" />
-          <Button Content="{loc:Loc OpenLibrary}"
-                  Command="{Binding OpenLibraryCommand}"
+                  ToolTip="{loc:Loc CreateLibraryTooltip}">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource NewLibraryIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="18" Height="18" Stretch="Uniform" />
+              <TextBlock Text="{loc:Loc CreateLibrary}" Margin="8,0,0,0" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding OpenLibraryCommand}"
                   Margin="6,12"
                   Padding="14,6"
-                  ToolTip="{loc:Loc OpenLibraryTooltip}" />
-          <Button Content="{loc:Loc AddBooks}"
-                  Command="{Binding AddBooksCommand}"
+                  ToolTip="{loc:Loc OpenLibraryTooltip}">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource OpenLibraryIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="18" Height="18" Stretch="Uniform" />
+              <TextBlock Text="{loc:Loc OpenLibrary}" Margin="8,0,0,0" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding AddBooksCommand}"
                   Margin="6,12"
                   Padding="14,6"
-                  ToolTip="{loc:Loc AddBooks}" />
-          <Button Content="{loc:Loc Scan}"
-                  Command="{Binding ScanFolderCommand}"
+                  ToolTip="{loc:Loc AddBooks}">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource AddBookIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="18" Height="18" Stretch="Uniform" />
+              <TextBlock Text="{loc:Loc AddBooks}" Margin="8,0,0,0" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding ScanFolderCommand}"
                   Margin="6,12"
                   Padding="14,6"
-                  ToolTip="{loc:Loc ScanFolderTooltip}" />
-          <Button Content="{loc:Loc Settings}"
-                  Margin="6,12"
+                  ToolTip="{loc:Loc ScanFolderTooltip}">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource ScanFolderIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="18" Height="18" Stretch="Uniform" />
+              <TextBlock Text="{loc:Loc Scan}" Margin="8,0,0,0" />
+            </StackPanel>
+          </Button>
+          <Button Margin="6,12"
                   Padding="14,6"
                   ToolTip="{loc:Loc OpenSettingsTooltip}"
-                  Click="OpenSettingsClicked" />
+                  Click="OpenSettingsClicked">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource SettingsIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="18" Height="18" Stretch="Uniform" />
+              <TextBlock Text="{loc:Loc Settings}" Margin="8,0,0,0" />
+            </StackPanel>
+          </Button>
         </StackPanel>
       </DockPanel>
     </Border>

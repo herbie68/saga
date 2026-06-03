@@ -28,17 +28,29 @@
       </Border>
 
       <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-        <Button Content="{loc:Loc Save}"
-                Command="{Binding SaveCommand}"
+        <Button Command="{Binding SaveCommand}"
                 MinWidth="70"
-                Margin="0,0,8,0" />
-        <Button Content="{loc:Loc Undo}"
-                Command="{Binding UndoCommand}"
+                Margin="0,0,8,0">
+          <StackPanel Orientation="Horizontal">
+            <Path Data="{StaticResource SaveIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="16" Height="16" Stretch="Uniform" />
+            <TextBlock Text="{loc:Loc Save}" Margin="7,0,0,0" />
+          </StackPanel>
+        </Button>
+        <Button Command="{Binding UndoCommand}"
                 MinWidth="70"
-                Margin="0,0,8,0" />
-        <Button Content="{loc:Loc Delete}"
-                Command="{Binding DeleteCommand}"
-                MinWidth="70" />
+                Margin="0,0,8,0">
+          <StackPanel Orientation="Horizontal">
+            <Path Data="{StaticResource UndoIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="16" Height="16" Stretch="Uniform" />
+            <TextBlock Text="{loc:Loc Undo}" Margin="7,0,0,0" />
+          </StackPanel>
+        </Button>
+        <Button Command="{Binding DeleteCommand}"
+                MinWidth="70">
+          <StackPanel Orientation="Horizontal">
+            <Path Data="{StaticResource DeleteIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="16" Height="16" Stretch="Uniform" />
+            <TextBlock Text="{loc:Loc Delete}" Margin="7,0,0,0" />
+          </StackPanel>
+        </Button>
       </StackPanel>
     </StackPanel>
 
