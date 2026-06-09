@@ -363,6 +363,50 @@ public sealed class ImportPrimitivesTests : IDisposable
         result.Warning.Should().BeNull();
     }
 
+    [Fact]
+    public void Metadata_cleaner_extracts_bracketed_series_title_and_number()
+    {
+        var metadata = new BookMetadata("[Atlanta 01] - Triptiek", ["Slaughter, Karin"]);
+
+        var cleaned = BookMetadataCleaner.Clean(metadata);
+
+        cleaned.Title.Should().Be("Triptiek");
+        cleaned.Series.Should().Be("Atlanta");
+        cleaned.SeriesNumber.Should().Be(1);
+        cleaned.Authors.Should().Equal("Karin Slaughter");
+    }
+
+    [Fact]
+    public void Metadata_cleaner_does_not_overwrite_explicit_series_values()
+    {
+        var metadata = new BookMetadata(
+            "[Other 99] - Triptiek",
+            ["Karin Slaughter"],
+            Series: "Atlanta",
+            SeriesNumber: 1);
+
+        var cleaned = BookMetadataCleaner.Clean(metadata);
+
+        cleaned.Title.Should().Be("Triptiek");
+        cleaned.Series.Should().Be("Atlanta");
+        cleaned.SeriesNumber.Should().Be(1);
+    }
+
+    [Theory]
+    [InlineData("[Atlanta XX] - Triptiek")]
+    [InlineData("[Atlanta] - Triptiek")]
+    [InlineData("[Atlanta 01]")]
+    public void Metadata_cleaner_ignores_ambiguous_bracketed_titles(string title)
+    {
+        var metadata = new BookMetadata(title, ["Author"]);
+
+        var cleaned = BookMetadataCleaner.Clean(metadata);
+
+        cleaned.Title.Should().Be(title);
+        cleaned.Series.Should().BeNull();
+        cleaned.SeriesNumber.Should().BeNull();
+    }
+
     [Theory]
     [InlineData("The Hobbit - J.R.R. Tolkien.epub", "The Hobbit", "J.R.R. Tolkien")]
     [InlineData("Unknown Title.pdf", "Unknown Title", "Unknown")]
