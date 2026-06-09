@@ -10,9 +10,8 @@ public sealed class ImportService(
     IImportRepository importRepository,
     ILibraryFileStore fileStore,
     IFileHasher hasher,
-    IMetadataAdapterResolver metadataAdapterResolver,
-    IImportExceptionClassifier exceptionClassifier,
-    IMetadataSidecarStore? metadataSidecarStore = null)
+    IMetadataSourceResolver metadataSourceResolver,
+    IImportExceptionClassifier exceptionClassifier)
 {
     private const string InvalidSourceDisplayName = "(invalid source)";
 
@@ -20,9 +19,8 @@ public sealed class ImportService(
     private readonly IImportRepository importRepository = importRepository;
     private readonly ILibraryFileStore fileStore = fileStore;
     private readonly IFileHasher hasher = hasher;
-    private readonly IMetadataAdapterResolver metadataAdapterResolver = metadataAdapterResolver;
     private readonly IImportExceptionClassifier exceptionClassifier = exceptionClassifier;
-    private readonly IMetadataSidecarStore? metadataSidecarStore = metadataSidecarStore;
+    private readonly IMetadataSourceResolver metadataSourceResolver = metadataSourceResolver;
 
     public async Task<ImportBatchResult> ImportAsync(
         IReadOnlyList<string> sourcePaths,
@@ -110,14 +108,7 @@ public sealed class ImportService(
                 MetadataReadResult metadata;
                 try
                 {
-                    metadata = await metadataAdapterResolver.Resolve(format).ReadAsync(sourcePath!, format, cancellationToken);
-                    var sidecarMetadata = metadataSidecarStore is null
-                        ? null
-                        : await metadataSidecarStore.TryReadAsync(sourcePath!, cancellationToken);
-                    if (sidecarMetadata is not null)
-                    {
-                        metadata = metadata with { Metadata = sidecarMetadata };
-                    }
+                    metadata = await metadataSourceResolver.ReadAsync(sourcePath!, format, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -264,7 +255,7 @@ public sealed class ImportService(
     {
         var message = warning is null
             ? SafeImportMessages.Added
-            : $"{SafeImportMessages.Added}; {SafeImportMessages.MetadataWarning}";
+            : $"{SafeImportMessages.Added}; {SafeImportMessages.MetadataWarning}: {warning}";
         return new(IsBlank(sourcePath) ? InvalidSourceDisplayName : sourcePath!, ImportOutcome.Added, message, bookId);
     }
 

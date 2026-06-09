@@ -38,6 +38,8 @@ public sealed class ImportServiceFixture : IAsyncDisposable
 
     public string LibraryPath { get; }
 
+    public string WorkspacePath => temporaryDirectory.DirectoryPath;
+
     public LibraryDbContextFactory ContextFactory { get; }
 
     public EfBookRepository BookRepository { get; }
@@ -81,14 +83,23 @@ public sealed class ImportServiceFixture : IAsyncDisposable
             metadataAdapterResolver);
     }
 
-    public ImportService CreateService(IBookRepository? bookRepository = null) =>
-        new(
+    public ImportService CreateService(
+        IBookRepository? bookRepository = null,
+        IMetadataSidecarStore? metadataSidecarStore = null)
+    {
+        var metadataSourceResolver = new MetadataSourceResolver(
+            MetadataAdapterResolver,
+            metadataSidecarStore ?? new JsonMetadataSidecarStore(),
+            new CalibreOpfMetadataSidecarStore());
+
+        return new ImportService(
             bookRepository ?? BookRepository,
             ImportRepository,
             FileStore,
             FileHasher,
-            MetadataAdapterResolver,
+            metadataSourceResolver,
             ExceptionClassifier);
+    }
 
     public string WriteSourceFile(string relativePath, string content) =>
         WriteBytesFile(relativePath, System.Text.Encoding.UTF8.GetBytes(content));

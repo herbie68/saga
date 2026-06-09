@@ -53,14 +53,7 @@ public sealed class ImportServiceTests
         await using var fixture = await ImportServiceFixture.CreateAsync();
         var sidecars = new ReturningMetadataSidecarStore(
             new BookMetadata("Corrected Title", ["Corrected Author"], Tags: ["Imported tag"]));
-        var service = new ImportService(
-            fixture.BookRepository,
-            fixture.ImportRepository,
-            fixture.FileStore,
-            fixture.FileHasher,
-            fixture.MetadataAdapterResolver,
-            fixture.ExceptionClassifier,
-            sidecars);
+        var service = fixture.CreateService(metadataSidecarStore: sidecars);
         var source = fixture.WriteBytesFile(
             @"incoming\Wrong Title - Wrong Author.pdf",
             Encoding.UTF8.GetBytes("sidecar-import"));
@@ -73,6 +66,66 @@ public sealed class ImportServiceTests
         book.Metadata.Authors.Should().Equal("Corrected Author");
         book.Metadata.Tags.Should().Equal("Imported tag");
         sidecars.ReadPaths.Should().Equal(source);
+    }
+
+    [Fact]
+    public async Task Import_async_prefers_calibre_opf_over_embedded_metadata_for_text_fields()
+    {
+        await using var fixture = await ImportServiceFixture.CreateAsync();
+        var service = fixture.CreateService();
+        var source = fixture.WriteBytesFile(
+            @"incoming\Wrong Title - Wrong Author.pdf",
+            Encoding.UTF8.GetBytes("opf-import"));
+        File.WriteAllText(
+            Path.Combine(Path.GetDirectoryName(source)!, "metadata.opf"),
+            """
+            <package xmlns:dc="http://purl.org/dc/elements/1.1/">
+              <metadata>
+                <dc:title>Correct Title</dc:title>
+                <dc:creator>Correct Author</dc:creator>
+                <dc:subject>Imported tag</dc:subject>
+                <meta name="calibre:series" content="Series Name" />
+                <meta name="calibre:series_index" content="2" />
+              </metadata>
+            </package>
+            """);
+
+        var result = await service.ImportAsync([source], default);
+
+        var book = await fixture.BookRepository.GetAsync(result.Items.Single().BookId!.Value, default);
+        book!.Metadata.Title.Should().Be("Correct Title");
+        book.Metadata.Authors.Should().Equal("Correct Author");
+        book.Metadata.Tags.Should().Equal("Imported tag");
+        book.Metadata.Series.Should().Be("Series Name");
+        book.Metadata.SeriesNumber.Should().Be(2);
+        result.Items.Single().Message.Should().Contain("calibre opf");
+    }
+
+    [Fact]
+    public async Task Import_async_prefers_json_sidecar_over_calibre_opf()
+    {
+        await using var fixture = await ImportServiceFixture.CreateAsync();
+        var sidecars = new ReturningMetadataSidecarStore(
+            new BookMetadata("Json Title", ["Json Author"], Tags: ["Json tag"]));
+        var service = fixture.CreateService(metadataSidecarStore: sidecars);
+        var source = fixture.WriteBytesFile(@"incoming\Book.pdf", Encoding.UTF8.GetBytes("json-over-opf"));
+        File.WriteAllText(
+            Path.Combine(Path.GetDirectoryName(source)!, "metadata.opf"),
+            """
+            <package xmlns:dc="http://purl.org/dc/elements/1.1/">
+              <metadata>
+                <dc:title>Opf Title</dc:title>
+                <dc:creator>Opf Author</dc:creator>
+              </metadata>
+            </package>
+            """);
+
+        var result = await service.ImportAsync([source], default);
+
+        var book = await fixture.BookRepository.GetAsync(result.Items.Single().BookId!.Value, default);
+        book!.Metadata.Title.Should().Be("Json Title");
+        book.Metadata.Authors.Should().Equal("Json Author");
+        book.Metadata.Tags.Should().Equal("Json tag");
     }
 
     [Fact]
@@ -203,7 +256,7 @@ public sealed class ImportServiceTests
             fixture.BookRepository,
             () => cancellation.Cancel());
         var importRepository = new DurableImportRepositoryDecorator(fixture.ImportRepository);
-        var service = new ImportService(
+        var service = CreateImportService(
             repository,
             importRepository,
             fixture.FileStore,
@@ -228,7 +281,7 @@ public sealed class ImportServiceTests
     public async Task Import_async_records_items_in_execution_order_even_when_display_names_match()
     {
         await using var fixture = await ImportServiceFixture.CreateAsync();
-        var service = new ImportService(
+        var service = CreateImportService(
             fixture.BookRepository,
             fixture.ImportRepository,
             fixture.FileStore,
@@ -253,7 +306,7 @@ public sealed class ImportServiceTests
     {
         await using var fixture = await ImportServiceFixture.CreateAsync();
         var source = fixture.WriteBytesFile(@"incoming\Leaky - Author.pdf", Encoding.UTF8.GetBytes("leaky"));
-        var service = new ImportService(
+        var service = CreateImportService(
             fixture.BookRepository,
             fixture.ImportRepository,
             fixture.FileStore,
@@ -276,7 +329,7 @@ public sealed class ImportServiceTests
         var source = fixture.WriteBytesFile(@"incoming\Cleanup - Author.pdf", Encoding.UTF8.GetBytes("cleanup"));
         var cleanupStore = new TrackingCleanupStore(fixture.FileStore);
         var cleanupRepository = new TrackingCleanupBookRepository(fixture.BookRepository);
-        var service = new ImportService(
+        var service = CreateImportService(
             cleanupRepository,
             fixture.ImportRepository,
             cleanupStore,
@@ -304,7 +357,7 @@ public sealed class ImportServiceTests
         var racingRepository = new RacingDuplicateBookRepository(fixture.BookRepository);
         var trackingRepository = new TrackingDeleteBookRepository(racingRepository);
         var cleanupStore = new TrackingCleanupStore(fixture.FileStore);
-        var service = new ImportService(
+        var service = CreateImportService(
             trackingRepository,
             fixture.ImportRepository,
             cleanupStore,
@@ -330,7 +383,7 @@ public sealed class ImportServiceTests
         var source = fixture.WriteBytesFile(@"incoming\Persisted - Author.pdf", Encoding.UTF8.GetBytes("persisted"));
         var trackingRepository = new TrackingDeleteBookRepository(fixture.BookRepository);
         var recordFailureRepository = new ThrowingRecordItemImportRepository(fixture.ImportRepository);
-        var service = new ImportService(
+        var service = CreateImportService(
             trackingRepository,
             recordFailureRepository,
             fixture.FileStore,
@@ -367,7 +420,7 @@ public sealed class ImportServiceTests
         var trackingRepository = new TrackingDeleteBookRepository(fixture.BookRepository);
         var cleanupStore = new TrackingCleanupStore(fixture.FileStore);
         var recordFailureRepository = new ThrowingRecordItemImportRepository(fixture.ImportRepository);
-        var service = new ImportService(
+        var service = CreateImportService(
             trackingRepository,
             recordFailureRepository,
             cleanupStore,
@@ -397,7 +450,7 @@ public sealed class ImportServiceTests
         var second = fixture.WriteBytesFile(@"incoming\shared\Second.pdf", Encoding.UTF8.GetBytes("two"));
         var duplicateBookRepository = new RacingDuplicateBookRepository(fixture.BookRepository);
         var duplicateClassifier = new DuplicateKeyRaceClassifier();
-        var service = new ImportService(
+        var service = CreateImportService(
             duplicateBookRepository,
             fixture.ImportRepository,
             fixture.FileStore,
@@ -418,6 +471,25 @@ public sealed class ImportServiceTests
         results.SelectMany(result => result.Items).Should().Contain(item => item.Outcome == ImportOutcome.Added);
         results.SelectMany(result => result.Items).Should().Contain(item => item.Outcome == ImportOutcome.PossibleDuplicate);
     }
+
+    private static ImportService CreateImportService(
+        IBookRepository bookRepository,
+        IImportRepository importRepository,
+        ILibraryFileStore fileStore,
+        IFileHasher fileHasher,
+        IMetadataAdapterResolver metadataAdapterResolver,
+        IImportExceptionClassifier exceptionClassifier,
+        IMetadataSidecarStore? metadataSidecarStore = null) =>
+        new(
+            bookRepository,
+            importRepository,
+            fileStore,
+            fileHasher,
+            new MetadataSourceResolver(
+                metadataAdapterResolver,
+                metadataSidecarStore,
+                new CalibreOpfMetadataSidecarStore()),
+            exceptionClassifier);
 
     private sealed class CancelAfterFirstSuccessBookRepository(
         IBookRepository inner,

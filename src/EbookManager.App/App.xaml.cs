@@ -84,6 +84,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IMetadataAdapter, EpubMetadataAdapter>();
         services.AddSingleton<IMetadataAdapter, CbzMetadataAdapter>();
         services.AddSingleton<IMetadataAdapterResolver, MetadataAdapterResolver>();
+        services.AddSingleton<CalibreOpfMetadataSidecarStore>();
+        services.AddSingleton<IMetadataSourceResolver, MetadataSourceResolver>();
         services.AddSingleton<BookSearchService>();
         services.AddSingleton<ILibraryFileStore, CurrentLibraryFileStore>();
         services.AddSingleton<IBookRepository, CurrentLibraryBookRepository>();
