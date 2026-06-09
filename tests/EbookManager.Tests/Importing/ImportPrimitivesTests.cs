@@ -321,6 +321,48 @@ public sealed class ImportPrimitivesTests : IDisposable
         result.Should().BeNull();
     }
 
+    [Fact]
+    public async Task Calibre_opf_sidecar_reads_core_metadata_fields()
+    {
+        var bookPath = WriteBytesFile("Calibre/Triptiek/Triptiek.epub", [1, 2, 3]);
+        File.WriteAllText(
+            Path.Combine(Path.GetDirectoryName(bookPath)!, "metadata.opf"),
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <package xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
+              <metadata>
+                <dc:title>Triptiek</dc:title>
+                <dc:creator>Karin Slaughter</dc:creator>
+                <dc:description>Een Atlanta-thriller.</dc:description>
+                <dc:language>nl</dc:language>
+                <dc:publisher>Cargo</dc:publisher>
+                <dc:date>2006-01-02</dc:date>
+                <dc:identifier opf:scheme="ISBN" xmlns:opf="http://www.idpf.org/2007/opf">9789023423456</dc:identifier>
+                <dc:subject>Thriller</dc:subject>
+                <dc:subject>Crime</dc:subject>
+                <meta name="calibre:series" content="Atlanta" />
+                <meta name="calibre:series_index" content="1" />
+              </metadata>
+            </package>
+            """);
+        var store = new CalibreOpfMetadataSidecarStore();
+
+        var result = await store.TryReadAsync(bookPath, default);
+
+        result.Should().NotBeNull();
+        result!.Metadata.Title.Should().Be("Triptiek");
+        result.Metadata.Authors.Should().Equal("Karin Slaughter");
+        result.Metadata.Description.Should().Be("Een Atlanta-thriller.");
+        result.Metadata.Language.Should().Be("nl");
+        result.Metadata.Publisher.Should().Be("Cargo");
+        result.Metadata.PublicationDate.Should().Be(new DateOnly(2006, 1, 2));
+        result.Metadata.Isbn.Should().Be("9789023423456");
+        result.Metadata.Tags.Should().Equal("Thriller", "Crime");
+        result.Metadata.Series.Should().Be("Atlanta");
+        result.Metadata.SeriesNumber.Should().Be(1);
+        result.Warning.Should().BeNull();
+    }
+
     [Theory]
     [InlineData("The Hobbit - J.R.R. Tolkien.epub", "The Hobbit", "J.R.R. Tolkien")]
     [InlineData("Unknown Title.pdf", "Unknown Title", "Unknown")]
