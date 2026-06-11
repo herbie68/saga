@@ -1,4 +1,4 @@
-# Ebook Manager
+# Saga
 
 Native Windows desktop ebook library manager built with .NET 10, WPF, SQLite, CommunityToolkit.Mvvm, EF Core, and Syncfusion WPF DataGrid.
 
@@ -84,7 +84,7 @@ SQLite is authoritative for metadata inside the application. Metadata edits are 
 
 During import, metadata is resolved in this order:
 
-1. Ebook Manager `metadata.json` sidecar next to the source file.
+1. Saga `metadata.json` sidecar next to the source file.
 2. Calibre `metadata.opf` sidecar next to the source file.
 3. Embedded format metadata, strongest for EPUB and KEPUB.
 4. Filename fallback.

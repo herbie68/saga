@@ -5,7 +5,7 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="AddBooks" xml:space="preserve"><value>Boeken toevoegen</value></data>
-  <data name="AppName" xml:space="preserve"><value>Ebook Manager</value></data>
+  <data name="AppName" xml:space="preserve"><value>Saga</value></data>
   <data name="AppVersion" xml:space="preserve"><value>Versie</value></data>
   <data name="Authors" xml:space="preserve"><value>Auteurs</value></data>
   <data name="BookCount" xml:space="preserve"><value>Boeken</value></data>
@@ -67,7 +67,7 @@
   <data name="Settings" xml:space="preserve"><value>Instellingen</value></data>
   <data name="SortBy" xml:space="preserve"><value>Sorteren op</value></data>
   <data name="SortLibraryTooltip" xml:space="preserve"><value>Sorteer de huidige bibliotheekweergave</value></data>
-  <data name="StartupFailedTitle" xml:space="preserve"><value>Opstarten van Ebook Manager mislukt</value></data>
+  <data name="StartupFailedTitle" xml:space="preserve"><value>Opstarten van Saga mislukt</value></data>
   <data name="Status" xml:space="preserve"><value>Status</value></data>
   <data name="Tags" xml:space="preserve"><value>Tags</value></data>
   <data name="Theme" xml:space="preserve"><value>Thema</value></data>
