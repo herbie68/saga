@@ -106,6 +106,7 @@ The following remain later-version candidates:
 - active e-reader detection and USB sync
 - native metadata write-back into ebook files
 - custom metadata fields
+- filter by book file type, such as EPUB, PDF, CBR, CBZ, MOBI, AZW, AZW3, and KFX
 - user-defined views
 - ebook conversion
 - full-text search inside book contents

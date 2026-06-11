@@ -39,6 +39,27 @@
   <data name="ImportPossibleDuplicate" xml:space="preserve"><value>Possible duplicate</value></data>
   <data name="ImportPossibleShort" xml:space="preserve"><value>Possible</value></data>
   <data name="ImportResults" xml:space="preserve"><value>Import results</value></data>
+  <data name="ImportOutcomeAdded" xml:space="preserve"><value>Added</value></data>
+  <data name="ImportOutcomeExactDuplicate" xml:space="preserve"><value>Skipped, book already exists</value></data>
+  <data name="ImportOutcomePossibleDuplicate" xml:space="preserve"><value>Probably already exists</value></data>
+  <data name="ImportOutcomeFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="ImportMessageAdded" xml:space="preserve"><value>Added</value></data>
+  <data name="ImportMessageExactDuplicateSkipped" xml:space="preserve"><value>Skipped, book already exists</value></data>
+  <data name="ImportMessagePossibleDuplicate" xml:space="preserve"><value>This book is probably already in the library</value></data>
+  <data name="ImportMessageManagedCopyFailed" xml:space="preserve"><value>Could not copy the book into the Saga library folder</value></data>
+  <data name="ImportMessageMetadataReadFailed" xml:space="preserve"><value>Could not read metadata from this file</value></data>
+  <data name="ImportMessageSourceUnreadable" xml:space="preserve"><value>Source file could not be read; make sure the file is available locally</value></data>
+  <data name="ImportMessageUnsupportedFormat" xml:space="preserve"><value>Unsupported file format</value></data>
+  <data name="ImportMessageInvalidSourcePath" xml:space="preserve"><value>Invalid source path</value></data>
+  <data name="ImportMessageImportFailed" xml:space="preserve"><value>Import failed</value></data>
+  <data name="ImportMessageCannotPersistResult" xml:space="preserve"><value>Could not save the import result</value></data>
+  <data name="ImportMessageCleanupIncomplete" xml:space="preserve"><value>Cleanup was not fully completed</value></data>
+  <data name="ImportMessageMetadataWarning" xml:space="preserve"><value>Metadata warning</value></data>
+  <data name="ImportMetadataSourceCalibreOpf" xml:space="preserve"><value>Metadata loaded from Calibre metadata.opf</value></data>
+  <data name="ImportMetadataSourceJson" xml:space="preserve"><value>Metadata loaded from Saga metadata.json</value></data>
+  <data name="ImportMalformedEpubMetadataPrefix" xml:space="preserve"><value>Malformed EPUB metadata:</value></data>
+  <data name="ImportMalformedCbzArchivePrefix" xml:space="preserve"><value>Malformed CBZ archive:</value></data>
+  <data name="ImportCalibreOpfIgnoredPrefix" xml:space="preserve"><value>Calibre metadata.opf ignored:</value></data>
   <data name="ImportTotal" xml:space="preserve"><value>Total</value></data>
   <data name="IncludeScanSubdirectoriesSetting" xml:space="preserve"><value>Include subdirectories when scanning</value></data>
   <data name="Isbn" xml:space="preserve"><value>ISBN</value></data>

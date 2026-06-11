@@ -1,11 +1,16 @@
 <Window x:Class="EbookManager.App.Views.ImportResultWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:EbookManager.App.Converters"
         xmlns:loc="clr-namespace:EbookManager.App.Localization"
         Title="{loc:Loc ImportResults}"
         Width="880"
         Height="560"
         WindowStartupLocation="CenterOwner">
+  <Window.Resources>
+    <converters:ImportOutcomeToLocalizedStringConverter x:Key="ImportOutcomeToLocalizedStringConverter" />
+    <converters:ImportMessageToLocalizedStringConverter x:Key="ImportMessageToLocalizedStringConverter" />
+  </Window.Resources>
   <DockPanel Margin="18">
     <StackPanel DockPanel.Dock="Top"
                 Margin="0,0,0,14">
@@ -69,8 +74,12 @@
             </Style>
           </DataGridTextColumn.ElementStyle>
         </DataGridTextColumn>
-        <DataGridTextColumn Header="{loc:Loc Outcome}" Binding="{Binding OutcomeLabel}" Width="160" />
-        <DataGridTextColumn Header="{loc:Loc Message}" Binding="{Binding Message}" Width="2*" />
+        <DataGridTextColumn Header="{loc:Loc Outcome}"
+                            Binding="{Binding Outcome, Converter={StaticResource ImportOutcomeToLocalizedStringConverter}}"
+                            Width="180" />
+        <DataGridTextColumn Header="{loc:Loc Message}"
+                            Binding="{Binding Message, Converter={StaticResource ImportMessageToLocalizedStringConverter}}"
+                            Width="2*" />
       </DataGrid.Columns>
     </DataGrid>
   </DockPanel>

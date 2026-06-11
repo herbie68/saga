@@ -39,6 +39,27 @@
   <data name="ImportPossibleDuplicate" xml:space="preserve"><value>Mogelijk duplicaat</value></data>
   <data name="ImportPossibleShort" xml:space="preserve"><value>Mogelijk</value></data>
   <data name="ImportResults" xml:space="preserve"><value>Importresultaten</value></data>
+  <data name="ImportOutcomeAdded" xml:space="preserve"><value>Toegevoegd</value></data>
+  <data name="ImportOutcomeExactDuplicate" xml:space="preserve"><value>Overgeslagen, boek al aanwezig</value></data>
+  <data name="ImportOutcomePossibleDuplicate" xml:space="preserve"><value>Waarschijnlijk al aanwezig</value></data>
+  <data name="ImportOutcomeFailed" xml:space="preserve"><value>Mislukt</value></data>
+  <data name="ImportMessageAdded" xml:space="preserve"><value>Toegevoegd</value></data>
+  <data name="ImportMessageExactDuplicateSkipped" xml:space="preserve"><value>Overgeslagen, boek al aanwezig</value></data>
+  <data name="ImportMessagePossibleDuplicate" xml:space="preserve"><value>Dit boek staat waarschijnlijk al in de bibliotheek</value></data>
+  <data name="ImportMessageManagedCopyFailed" xml:space="preserve"><value>Het boek kon niet naar de Saga bibliotheekmap worden gekopieerd</value></data>
+  <data name="ImportMessageMetadataReadFailed" xml:space="preserve"><value>De metadata kon niet uit dit bestand worden gelezen</value></data>
+  <data name="ImportMessageSourceUnreadable" xml:space="preserve"><value>Het bronbestand kon niet worden gelezen; controleer of het bestand lokaal beschikbaar is</value></data>
+  <data name="ImportMessageUnsupportedFormat" xml:space="preserve"><value>Niet-ondersteund bestandsformaat</value></data>
+  <data name="ImportMessageInvalidSourcePath" xml:space="preserve"><value>Ongeldig bronpad</value></data>
+  <data name="ImportMessageImportFailed" xml:space="preserve"><value>Importeren mislukt</value></data>
+  <data name="ImportMessageCannotPersistResult" xml:space="preserve"><value>Het importresultaat kon niet worden opgeslagen</value></data>
+  <data name="ImportMessageCleanupIncomplete" xml:space="preserve"><value>Opruimen is niet volledig gelukt</value></data>
+  <data name="ImportMessageMetadataWarning" xml:space="preserve"><value>Metadatawaarschuwing</value></data>
+  <data name="ImportMetadataSourceCalibreOpf" xml:space="preserve"><value>Metadata geladen uit Calibre metadata.opf</value></data>
+  <data name="ImportMetadataSourceJson" xml:space="preserve"><value>Metadata geladen uit Saga metadata.json</value></data>
+  <data name="ImportMalformedEpubMetadataPrefix" xml:space="preserve"><value>Ongeldige EPUB-metadata:</value></data>
+  <data name="ImportMalformedCbzArchivePrefix" xml:space="preserve"><value>Ongeldig CBZ-archief:</value></data>
+  <data name="ImportCalibreOpfIgnoredPrefix" xml:space="preserve"><value>Calibre metadata.opf genegeerd:</value></data>
   <data name="ImportTotal" xml:space="preserve"><value>Totaal</value></data>
   <data name="IncludeScanSubdirectoriesSetting" xml:space="preserve"><value>Submappen meenemen bij scannen</value></data>
   <data name="Isbn" xml:space="preserve"><value>ISBN</value></data>
