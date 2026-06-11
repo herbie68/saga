@@ -39,6 +39,37 @@ public sealed class ImportAgentTests
         job.Title.Should().Be("Import cancelled");
     }
 
+    [Fact]
+    public async Task StartScanning_marks_agent_active_until_import_starts_or_is_cancelled()
+    {
+        var job = new ImportJobViewModel();
+        var runner = new FakeImportRunner();
+        var agent = new ImportAgent(runner, job);
+
+        agent.StartScanning();
+
+        agent.IsActive.Should().BeTrue();
+
+        await agent.StartImportAsync(["a.epub"], _ => Task.CompletedTask, CancellationToken.None);
+        await agent.ActiveTask!;
+
+        agent.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public void CancelActiveJob_marks_scanning_job_cancelled()
+    {
+        var job = new ImportJobViewModel();
+        var runner = new FakeImportRunner();
+        var agent = new ImportAgent(runner, job);
+
+        agent.StartScanning();
+        agent.CancelActiveJob();
+
+        agent.IsActive.Should().BeFalse();
+        job.Title.Should().Be("Import cancelled");
+    }
+
     private sealed class FakeImportRunner : IImportRunner
     {
         public Task<ImportBatchResult> ImportAsync(

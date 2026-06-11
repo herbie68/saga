@@ -36,7 +36,21 @@ public sealed class LibraryDbContextTests
         await repository.AddAsync(book, file, default);
 
         File.Exists(Path.Combine(libraryPath, "library.db")).Should().BeTrue();
-        (await repository.ListAsync(default)).Should().ContainSingle().Which.Should().Be(book);
+        var listedBook = (await repository.ListAsync(default)).Should().ContainSingle().Which;
+        listedBook.Should().Be(book with
+        {
+            Metadata = new BookMetadata(
+                book.Metadata.Title,
+                book.Metadata.Authors,
+                book.Metadata.Description,
+                book.Metadata.Language,
+                book.Metadata.Publisher,
+                book.Metadata.PublicationDate,
+                book.Metadata.Tags,
+                book.Metadata.Series,
+                book.Metadata.SeriesNumber,
+                book.Metadata.Isbn)
+        });
         (await repository.GetAsync(book.Id, default)).Should().Be(book);
         (await repository.HasHashAsync(Hash('A'), default)).Should().BeTrue();
         (await repository.HasNormalizedTitleAndAuthorAsync(
@@ -102,6 +116,23 @@ public sealed class LibraryDbContextTests
         var reloaded = await repository.GetAsync(book.Id, default);
         reloaded!.Metadata.Authors.Should().Equal("First Author", "Second Author");
         reloaded.Metadata.Tags.Should().Equal("Third Tag", "First Tag");
+    }
+
+    [Fact]
+    public async Task ListAsync_omits_cover_bytes_for_fast_library_overviews()
+    {
+        using var library = new TemporaryLibrary();
+        var factory = await CreateMigratedFactoryAsync(library.DirectoryPath);
+        var repository = new EfBookRepository(factory, library.DirectoryPath);
+        var book = CreateBook("Cover Heavy", ["Author"], coverBytes: [1, 2, 3, 4]);
+
+        await repository.AddAsync(book, CreateFile(book.Id), default);
+
+        var listed = (await repository.ListAsync(default)).Should().ContainSingle().Which;
+        var full = await repository.GetAsync(book.Id, default);
+
+        listed.Metadata.CoverBytes.Should().BeNull();
+        full!.Metadata.CoverBytes.Should().Equal(1, 2, 3, 4);
     }
 
     [Fact]

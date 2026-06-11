@@ -306,7 +306,7 @@ public sealed class LibraryViewModelTests
     }
 
     [Fact]
-    public async Task ImportFilesAsync_starts_background_import_and_refreshes_during_progress()
+    public async Task ImportFilesAsync_starts_background_import_without_refreshing_during_progress()
     {
         var initial = CreateBook("Existing", ["Author"]);
         var imported = CreateBook("Imported", ["Author"]);
@@ -323,8 +323,8 @@ public sealed class LibraryViewModelTests
         agent.IsActive.Should().BeTrue();
         await agent.ReportProgressAsync(25);
 
-        repository.ListCalls.Should().BeGreaterThan(1);
-        viewModel.VisibleBooks.Select(book => book.Title).Should().Contain("Imported");
+        repository.ListCalls.Should().Be(1);
+        viewModel.VisibleBooks.Select(book => book.Title).Should().NotContain("Imported");
     }
 
     [Fact]

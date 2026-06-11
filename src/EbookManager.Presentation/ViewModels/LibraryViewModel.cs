@@ -13,8 +13,6 @@ namespace EbookManager.Presentation.ViewModels;
 
 public sealed partial class LibraryViewModel : ObservableObject
 {
-    private const int ImportRefreshInterval = 25;
-
     private readonly IBookRepository bookRepository;
     private readonly BookSearchService searchService;
     private readonly IUserInteractionService userInteraction;
@@ -27,7 +25,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     private readonly IAppSettingsStore? settingsStore;
     private IReadOnlyList<Book> books = [];
     private bool hasAppliedDefaultView;
-    private int lastImportRefreshAt;
+    private int selectionVersion;
 
     public LibraryViewModel(
         IBookRepository bookRepository,
@@ -135,15 +133,20 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     partial void OnSelectedSortOptionChanged(LibrarySortOption value) => ApplyFilter();
 
-    partial void OnSelectedBookChanged(BookRowViewModel? value)
+    async partial void OnSelectedBookChanged(BookRowViewModel? value)
     {
+        var version = ++selectionVersion;
         if (value is null)
         {
             Details.Clear();
+            return;
         }
-        else
+
+        Details.Load(value.Book);
+        var fullBook = await bookRepository.GetAsync(value.Id, CancellationToken.None);
+        if (version == selectionVersion && fullBook is not null)
         {
-            Details.Load(value.Book);
+            Details.Load(fullBook);
         }
     }
 
@@ -181,7 +184,6 @@ public sealed partial class LibraryViewModel : ObservableObject
 
         if (importAgent is not null)
         {
-            lastImportRefreshAt = 0;
             await importAgent.StartImportAsync(paths, OnImportProgressAsync, cancellationToken);
             OnPropertyChanged(nameof(HasActiveImport));
             return;
@@ -463,17 +465,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         ApplyFilter();
     }
 
-    private async Task OnImportProgressAsync(ImportProgress progress)
-    {
-        if (progress.ProcessedCount - lastImportRefreshAt < ImportRefreshInterval &&
-            progress.ProcessedCount < progress.TotalCount)
-        {
-            return;
-        }
-
-        lastImportRefreshAt = progress.ProcessedCount;
-        await RefreshAsync(CancellationToken.None);
-    }
+    private static Task OnImportProgressAsync(ImportProgress progress) => Task.CompletedTask;
 
     private async void OnImportAgentCompleted(object? sender, ImportBatchResult result)
     {

@@ -9,7 +9,11 @@
     <Nullable>enable</Nullable>
     <AssemblyVersion>26.6.3.0</AssemblyVersion>
     <FileVersion>26.6.3.0</FileVersion>
+    <ApplicationIcon>Resources\AppIcon\appicon.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Resources\AppIcon\appicon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EbookManager.Domain\EbookManager.Domain.csproj" />

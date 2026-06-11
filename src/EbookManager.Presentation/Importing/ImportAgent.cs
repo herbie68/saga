@@ -17,14 +17,14 @@ public sealed class ImportAgent(
 
     public Task? ActiveTask { get; private set; }
 
-    public bool IsActive => ActiveTask is { IsCompleted: false };
+    public bool IsActive => Job.IsActive || ActiveTask is { IsCompleted: false };
 
     public Task StartImportAsync(
         IReadOnlyList<string> sourcePaths,
         Func<ImportProgress, Task> onProgress,
         CancellationToken cancellationToken)
     {
-        if (IsActive)
+        if (ActiveTask is { IsCompleted: false })
         {
             throw new InvalidOperationException("An import job is already active.");
         }
@@ -37,7 +37,19 @@ public sealed class ImportAgent(
 
     public void StartScanning() => Job.StartScanning();
 
-    public void CancelActiveJob() => activeCancellation?.Cancel();
+    public void CancelActiveJob()
+    {
+        if (activeCancellation is not null)
+        {
+            activeCancellation.Cancel();
+            return;
+        }
+
+        if (Job.IsActive)
+        {
+            Job.Cancelled();
+        }
+    }
 
     private async Task RunImportAsync(
         IReadOnlyList<string> sourcePaths,

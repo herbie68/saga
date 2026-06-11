@@ -14,10 +14,32 @@ public sealed class EfBookRepository(
     public async Task<IReadOnlyList<Book>> ListAsync(CancellationToken cancellationToken)
     {
         await using var context = contextFactory.Create(libraryPath);
-        var books = await BooksWithMetadata(context)
+        var books = await context.Books
             .AsNoTracking()
             .OrderBy(x => x.Title)
             .ThenBy(x => x.Id)
+            .Select(x => new BookListProjection(
+                x.Id,
+                x.Title,
+                x.Description,
+                x.Language,
+                x.Publisher,
+                x.PublicationDate,
+                x.Series,
+                x.SeriesNumber,
+                x.Isbn,
+                x.ReadingStatus,
+                x.CoverRelativePath,
+                x.CreatedUtc,
+                x.UpdatedUtc,
+                x.BookAuthors
+                    .OrderBy(bookAuthor => bookAuthor.Order)
+                    .Select(bookAuthor => bookAuthor.Author.Name)
+                    .ToList(),
+                x.BookTags
+                    .OrderBy(bookTag => bookTag.Order)
+                    .Select(bookTag => bookTag.Tag.Name)
+                    .ToList()))
             .ToListAsync(cancellationToken);
         return books.Select(ToDomain).ToList().AsReadOnly();
     }
@@ -28,7 +50,7 @@ public sealed class EfBookRepository(
         var book = await BooksWithMetadata(context)
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
-        return book is null ? null : ToDomain(book);
+        return book is null ? null : ToDomain(book, includeCoverBytes: true);
     }
 
     public async Task<bool> HasHashAsync(string sha256, CancellationToken cancellationToken)
@@ -288,7 +310,7 @@ public sealed class EfBookRepository(
             WriteBackMessage = file.WriteBackMessage
         };
 
-    private static Book ToDomain(BookEntity entity) =>
+    private static Book ToDomain(BookEntity entity, bool includeCoverBytes) =>
         new(
             entity.Id,
             new BookMetadata(
@@ -308,11 +330,30 @@ public sealed class EfBookRepository(
                 entity.Series,
                 entity.SeriesNumber,
                 entity.Isbn,
-                entity.CoverBytes),
+                includeCoverBytes ? entity.CoverBytes : null),
             entity.ReadingStatus,
             entity.CoverRelativePath,
             entity.CreatedUtc,
             entity.UpdatedUtc);
+
+    private static Book ToDomain(BookListProjection projection) =>
+        new(
+            projection.Id,
+            new BookMetadata(
+                projection.Title,
+                projection.Authors,
+                projection.Description,
+                projection.Language,
+                projection.Publisher,
+                projection.PublicationDate,
+                projection.Tags,
+                projection.Series,
+                projection.SeriesNumber,
+                projection.Isbn),
+            projection.ReadingStatus,
+            projection.CoverRelativePath,
+            projection.CreatedUtc,
+            projection.UpdatedUtc);
 
     private static BookFile ToDomain(BookFileEntity entity) =>
         new(
@@ -382,4 +423,21 @@ public sealed class EfBookRepository(
     }
 
     private sealed record NormalizedMetadataName(string Name, string NormalizedName);
+
+    private sealed record BookListProjection(
+        Guid Id,
+        string Title,
+        string? Description,
+        string? Language,
+        string? Publisher,
+        DateOnly? PublicationDate,
+        string? Series,
+        decimal? SeriesNumber,
+        string? Isbn,
+        ReadingStatus ReadingStatus,
+        string? CoverRelativePath,
+        DateTimeOffset CreatedUtc,
+        DateTimeOffset UpdatedUtc,
+        IReadOnlyList<string> Authors,
+        IReadOnlyList<string> Tags);
 }
