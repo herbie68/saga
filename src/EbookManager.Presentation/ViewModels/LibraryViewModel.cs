@@ -5,6 +5,7 @@ using EbookManager.Application.Books;
 using EbookManager.Application.Importing;
 using EbookManager.Domain.Abstractions;
 using EbookManager.Domain.Books;
+using EbookManager.Domain.Importing;
 using EbookManager.Libraries;
 using EbookManager.Presentation.Abstractions;
 
@@ -12,10 +13,13 @@ namespace EbookManager.Presentation.ViewModels;
 
 public sealed partial class LibraryViewModel : ObservableObject
 {
+    private const int ImportRefreshInterval = 25;
+
     private readonly IBookRepository bookRepository;
     private readonly BookSearchService searchService;
     private readonly IUserInteractionService userInteraction;
     private readonly ImportService? importService;
+    private readonly IImportAgent? importAgent;
     private readonly LibraryService? libraryService;
     private readonly CurrentLibrary? currentLibrary;
     private readonly ILibraryDatabaseInitializer? databaseInitializer;
@@ -23,6 +27,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     private readonly IAppSettingsStore? settingsStore;
     private IReadOnlyList<Book> books = [];
     private bool hasAppliedDefaultView;
+    private int lastImportRefreshAt;
 
     public LibraryViewModel(
         IBookRepository bookRepository,
@@ -30,6 +35,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         BookDetailsViewModel details,
         IUserInteractionService userInteraction,
         ImportService? importService = null,
+        IImportAgent? importAgent = null,
         LibraryService? libraryService = null,
         CurrentLibrary? currentLibrary = null,
         ILibraryDatabaseInitializer? databaseInitializer = null,
@@ -41,6 +47,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         Details = details;
         this.userInteraction = userInteraction;
         this.importService = importService;
+        this.importAgent = importAgent;
         this.libraryService = libraryService;
         this.currentLibrary = currentLibrary;
         this.databaseInitializer = databaseInitializer;
@@ -51,6 +58,10 @@ public sealed partial class LibraryViewModel : ObservableObject
 
         details.BookSaved += OnDetailsBookSaved;
         details.BookDeleted += OnDetailsBookDeleted;
+        if (importAgent is not null)
+        {
+            importAgent.Completed += OnImportAgentCompleted;
+        }
     }
 
     public ObservableCollection<BookRowViewModel> VisibleBooks { get; } = [];
@@ -62,6 +73,8 @@ public sealed partial class LibraryViewModel : ObservableObject
     public ObservableCollection<FacetFilterViewModel> LanguageFilters { get; } = [];
 
     public BookDetailsViewModel Details { get; }
+
+    public ImportJobViewModel? ImportJob => importAgent?.Job;
 
     [ObservableProperty]
     private string searchText = string.Empty;
@@ -89,6 +102,8 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     public bool HasActiveLibrary => CurrentLibraryPath is not null;
 
+    public bool HasActiveImport => importAgent?.IsActive == true;
+
     public int VisibleBookCount => VisibleBooks.Count;
 
     public IAsyncRelayCommand RefreshCommand => refreshCommand ??= new AsyncRelayCommand(RefreshAsync);
@@ -96,12 +111,16 @@ public sealed partial class LibraryViewModel : ObservableObject
     public IAsyncRelayCommand ScanFolderCommand => scanFolderCommand ??= new AsyncRelayCommand(ScanFolderAsync);
     public IAsyncRelayCommand CreateLibraryCommand => createLibraryCommand ??= new AsyncRelayCommand(CreateLibraryAsync);
     public IAsyncRelayCommand OpenLibraryCommand => openLibraryCommand ??= new AsyncRelayCommand(OpenLibraryAsync);
+    public IRelayCommand CancelImportCommand => cancelImportCommand ??= new RelayCommand(() => importAgent?.CancelActiveJob());
+    public IAsyncRelayCommand ShowImportDetailsCommand => showImportDetailsCommand ??= new AsyncRelayCommand(ShowImportDetailsAsync);
 
     private AsyncRelayCommand? refreshCommand;
     private AsyncRelayCommand? addBooksCommand;
     private AsyncRelayCommand? scanFolderCommand;
     private AsyncRelayCommand? createLibraryCommand;
     private AsyncRelayCommand? openLibraryCommand;
+    private RelayCommand? cancelImportCommand;
+    private AsyncRelayCommand? showImportDetailsCommand;
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
@@ -137,7 +156,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
 
         var paths = await userInteraction.PickBookFilesAsync(cancellationToken);
-        if (paths.Count == 0 || importService is null)
+        if (paths.Count == 0 || (importService is null && importAgent is null))
         {
             return;
         }
@@ -155,12 +174,20 @@ public sealed partial class LibraryViewModel : ObservableObject
             return;
         }
 
-        if (paths.Count == 0 || importService is null)
+        if (paths.Count == 0 || (importService is null && importAgent is null))
         {
             return;
         }
 
-        var result = await importService.ImportAsync(paths, cancellationToken);
+        if (importAgent is not null)
+        {
+            lastImportRefreshAt = 0;
+            await importAgent.StartImportAsync(paths, OnImportProgressAsync, cancellationToken);
+            OnPropertyChanged(nameof(HasActiveImport));
+            return;
+        }
+
+        var result = await importService!.ImportAsync(paths, cancellationToken);
         LastImportResult = new ImportResultViewModel(result);
         await userInteraction.ShowImportResultAsync(LastImportResult, cancellationToken);
         await RefreshAsync(cancellationToken);
@@ -174,7 +201,7 @@ public sealed partial class LibraryViewModel : ObservableObject
             return;
         }
 
-        if (directoryScanner is null || importService is null)
+        if (directoryScanner is null || (importService is null && importAgent is null))
         {
             return;
         }
@@ -185,9 +212,12 @@ public sealed partial class LibraryViewModel : ObservableObject
             return;
         }
 
+        importAgent?.StartScanning();
         var includeSubdirectories = settingsStore is null ||
             (await settingsStore.LoadAsync(cancellationToken)).IncludeScanSubdirectories;
-        var files = directoryScanner.Scan(folder, includeSubdirectories, cancellationToken);
+        var files = await Task.Run(
+            () => directoryScanner.Scan(folder, includeSubdirectories, cancellationToken),
+            cancellationToken);
         await ImportFilesAsync(files, cancellationToken);
     }
 
@@ -431,5 +461,36 @@ public sealed partial class LibraryViewModel : ObservableObject
         books = books.Where(book => book.Id != bookId).ToList();
         RefreshFacetFilters();
         ApplyFilter();
+    }
+
+    private async Task OnImportProgressAsync(ImportProgress progress)
+    {
+        if (progress.ProcessedCount - lastImportRefreshAt < ImportRefreshInterval &&
+            progress.ProcessedCount < progress.TotalCount)
+        {
+            return;
+        }
+
+        lastImportRefreshAt = progress.ProcessedCount;
+        await RefreshAsync(CancellationToken.None);
+    }
+
+    private async void OnImportAgentCompleted(object? sender, ImportBatchResult result)
+    {
+        LastImportResult = new ImportResultViewModel(result);
+        OnPropertyChanged(nameof(HasActiveImport));
+        await RefreshAsync(CancellationToken.None);
+    }
+
+    private async Task ShowImportDetailsAsync(CancellationToken cancellationToken)
+    {
+        var result = importAgent?.Job.LatestResult;
+        if (result is null)
+        {
+            return;
+        }
+
+        LastImportResult = new ImportResultViewModel(result);
+        await userInteraction.ShowImportResultAsync(LastImportResult, cancellationToken);
     }
 }

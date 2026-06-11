@@ -305,6 +305,51 @@ public sealed class LibraryViewModelTests
         viewModel.EmptyStateMessage.Should().Be("Create or open a library before scanning folders.");
     }
 
+    [Fact]
+    public async Task ImportFilesAsync_starts_background_import_and_refreshes_during_progress()
+    {
+        var initial = CreateBook("Existing", ["Author"]);
+        var imported = CreateBook("Imported", ["Author"]);
+        var repository = new RefreshingBookRepository([initial], [initial, imported]);
+        var agent = new ScriptedImportAgent();
+        var viewModel = CreateViewModel(
+            [initial],
+            repository: repository,
+            currentLibrary: CreateActiveLibrary(),
+            importAgent: agent);
+
+        await viewModel.RefreshAsync();
+        await viewModel.ImportFilesAsync(["book.epub"]);
+        agent.IsActive.Should().BeTrue();
+        await agent.ReportProgressAsync(25);
+
+        repository.ListCalls.Should().BeGreaterThan(1);
+        viewModel.VisibleBooks.Select(book => book.Title).Should().Contain("Imported");
+    }
+
+    [Fact]
+    public async Task Import_completion_updates_last_result_and_refreshes_library()
+    {
+        var initial = CreateBook("Existing", ["Author"]);
+        var imported = CreateBook("Imported", ["Author"]);
+        var repository = new RefreshingBookRepository([initial], [initial, imported]);
+        var agent = new ScriptedImportAgent();
+        var viewModel = CreateViewModel(
+            [initial],
+            repository: repository,
+            currentLibrary: CreateActiveLibrary(),
+            importAgent: agent);
+        var result = new ImportBatchResult(Guid.NewGuid(), [new ImportItemResult("book.epub", ImportOutcome.Added, "added")]);
+
+        await viewModel.RefreshAsync();
+        await viewModel.ImportFilesAsync(["book.epub"]);
+        await agent.CompleteAsync(result);
+
+        viewModel.LastImportResult.Should().NotBeNull();
+        viewModel.LastImportResult!.TotalCount.Should().Be(1);
+        viewModel.VisibleBooks.Select(book => book.Title).Should().Contain("Imported");
+    }
+
     private static LibraryViewModel CreateViewModel(
         IReadOnlyList<Book> books,
         IUserInteractionService? userInteraction = null,
@@ -313,7 +358,8 @@ public sealed class LibraryViewModelTests
         ILibraryDatabaseInitializer? databaseInitializer = null,
         IAppSettingsStore? settingsStore = null,
         IBookRepository? repository = null,
-        BookDetailsViewModel? details = null)
+        BookDetailsViewModel? details = null,
+        IImportAgent? importAgent = null)
     {
         repository ??= new StaticBookRepository(books);
         details ??= new BookDetailsViewModel(new BookService(
@@ -328,7 +374,8 @@ public sealed class LibraryViewModelTests
             libraryService: libraryService,
             currentLibrary: currentLibrary,
             databaseInitializer: databaseInitializer,
-            settingsStore: settingsStore);
+            settingsStore: settingsStore,
+            importAgent: importAgent);
     }
 
     private static Book CreateBook(
@@ -349,21 +396,28 @@ public sealed class LibraryViewModelTests
             now);
     }
 
-    private sealed class StaticBookRepository(IReadOnlyList<Book> books) : IBookRepository
+    private static CurrentLibrary CreateActiveLibrary()
     {
-        private readonly List<Book> books = [.. books];
+        var currentLibrary = new CurrentLibrary();
+        currentLibrary.Set(new LibraryDescriptor("Test", Path.GetTempPath(), DateTimeOffset.UtcNow));
+        return currentLibrary;
+    }
 
-        public Task<IReadOnlyList<Book>> ListAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Book>>([.. books]);
-        public Task<Book?> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(books.SingleOrDefault(book => book.Id == id));
+    private class StaticBookRepository(IReadOnlyList<Book> books) : IBookRepository
+    {
+        protected readonly List<Book> Books = [.. books];
+
+        public virtual Task<IReadOnlyList<Book>> ListAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Book>>([.. Books]);
+        public Task<Book?> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(Books.SingleOrDefault(book => book.Id == id));
         public Task<bool> HasHashAsync(string sha256, CancellationToken cancellationToken) => Task.FromResult(false);
         public Task<bool> HasNormalizedTitleAndAuthorAsync(string title, IReadOnlyList<string> authors, CancellationToken cancellationToken) => Task.FromResult(false);
         public Task AddAsync(Book book, BookFile file, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task UpdateAsync(Book book, CancellationToken cancellationToken)
         {
-            var index = books.FindIndex(existing => existing.Id == book.Id);
+            var index = Books.FindIndex(existing => existing.Id == book.Id);
             if (index >= 0)
             {
-                books[index] = book;
+                Books[index] = book;
             }
 
             return Task.CompletedTask;
@@ -371,11 +425,32 @@ public sealed class LibraryViewModelTests
 
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
-            books.RemoveAll(book => book.Id == id);
+            Books.RemoveAll(book => book.Id == id);
             return Task.CompletedTask;
         }
         public Task<IReadOnlyList<BookFile>> ListFilesAsync(Guid bookId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<BookFile>>([]);
         public Task UpdateFileWriteBackAsync(Guid fileId, MetadataWriteResult result, CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class RefreshingBookRepository : StaticBookRepository
+    {
+        private readonly IReadOnlyList<Book> firstRefreshBooks;
+        private readonly IReadOnlyList<Book> laterRefreshBooks;
+        public int ListCalls { get; private set; }
+
+        public RefreshingBookRepository(
+            IReadOnlyList<Book> firstRefreshBooks,
+            IReadOnlyList<Book> laterRefreshBooks) : base(firstRefreshBooks)
+        {
+            this.firstRefreshBooks = firstRefreshBooks;
+            this.laterRefreshBooks = laterRefreshBooks;
+        }
+
+        public override Task<IReadOnlyList<Book>> ListAsync(CancellationToken cancellationToken)
+        {
+            ListCalls++;
+            return Task.FromResult<IReadOnlyList<Book>>(ListCalls == 1 ? firstRefreshBooks : laterRefreshBooks);
+        }
     }
 
     private sealed class NoopLibraryFileStore : ILibraryFileStore
@@ -446,6 +521,64 @@ public sealed class LibraryViewModelTests
         {
             InitializedLibraries.Add(library);
             return Task.CompletedTask;
+        }
+    }
+
+    private sealed class ScriptedImportAgent : IImportAgent
+    {
+        private Func<ImportProgress, Task>? onProgress;
+
+        public event EventHandler<ImportBatchResult>? Completed;
+
+        public ImportJobViewModel Job { get; } = new();
+
+        public bool IsActive { get; private set; }
+
+        public bool StartScanningCalled { get; private set; }
+
+        public void StartScanning()
+        {
+            StartScanningCalled = true;
+            Job.StartScanning();
+        }
+
+        public Task StartImportAsync(
+            IReadOnlyList<string> sourcePaths,
+            Func<ImportProgress, Task> onProgress,
+            CancellationToken cancellationToken)
+        {
+            IsActive = true;
+            this.onProgress = onProgress;
+            Job.StartImport(Guid.NewGuid(), sourcePaths.Count);
+            return Task.CompletedTask;
+        }
+
+        public void CancelActiveJob() => IsActive = false;
+
+        public async Task ReportProgressAsync(int processedCount)
+        {
+            var progress = new ImportProgress(
+                Guid.NewGuid(),
+                Math.Max(processedCount, 1),
+                processedCount,
+                processedCount,
+                0,
+                0,
+                0,
+                new ImportItemResult("book.epub", ImportOutcome.Added, "added"));
+            Job.ApplyProgress(progress);
+            if (onProgress is not null)
+            {
+                await onProgress(progress);
+            }
+        }
+
+        public async Task CompleteAsync(ImportBatchResult result)
+        {
+            IsActive = false;
+            Job.Complete(result);
+            Completed?.Invoke(this, result);
+            await Task.CompletedTask;
         }
     }
 }
