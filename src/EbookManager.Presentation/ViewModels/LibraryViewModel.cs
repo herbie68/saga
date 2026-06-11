@@ -275,10 +275,25 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     private async Task<IReadOnlyList<Book>> LoadBooksAsync(CancellationToken cancellationToken)
     {
+        var progress = new Progress<LibraryLoadProgress>(snapshot =>
+        {
+            LoadingLibraryTotalCount = snapshot.TotalCount;
+            LoadedLibraryCount = snapshot.LoadedCount;
+        });
+
+        return await Task.Run(
+            () => LoadBooksInBackgroundAsync(progress, cancellationToken),
+            cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<Book>> LoadBooksInBackgroundAsync(
+        IProgress<LibraryLoadProgress> progress,
+        CancellationToken cancellationToken)
+    {
         if (HasActiveLibrary && bookRepository is IBookPagedRepository pagedRepository)
         {
             var totalCount = await pagedRepository.CountAsync(cancellationToken);
-            LoadingLibraryTotalCount = totalCount;
+            progress.Report(new LibraryLoadProgress(totalCount, 0));
             if (totalCount == 0)
             {
                 return [];
@@ -298,16 +313,14 @@ public sealed partial class LibraryViewModel : ObservableObject
                 }
 
                 loadedBooks.AddRange(page);
-                LoadedLibraryCount = loadedBooks.Count;
-                await Task.Yield();
+                progress.Report(new LibraryLoadProgress(totalCount, loadedBooks.Count));
             }
 
             return loadedBooks.AsReadOnly();
         }
 
         var allBooks = await bookRepository.ListAsync(cancellationToken);
-        LoadingLibraryTotalCount = allBooks.Count;
-        LoadedLibraryCount = allBooks.Count;
+        progress.Report(new LibraryLoadProgress(allBooks.Count, allBooks.Count));
         return allBooks;
     }
 
@@ -316,6 +329,8 @@ public sealed partial class LibraryViewModel : ObservableObject
         LoadingLibraryTotalCount = 0;
         LoadedLibraryCount = 0;
     }
+
+    private sealed record LibraryLoadProgress(int TotalCount, int LoadedCount);
 
     private async Task CreateLibraryAsync(CancellationToken cancellationToken)
     {
