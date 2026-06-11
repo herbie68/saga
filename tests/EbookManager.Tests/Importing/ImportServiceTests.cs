@@ -48,6 +48,27 @@ public sealed class ImportServiceTests
     }
 
     [Fact]
+    public async Task Import_async_reports_progress_after_each_processed_item()
+    {
+        await using var fixture = await ImportServiceFixture.CreateAsync();
+        var service = fixture.CreateService();
+        var first = fixture.WriteBytesFile(@"incoming\First - Author.pdf", Encoding.UTF8.GetBytes("first"));
+        var second = fixture.WriteBytesFile(@"incoming\Second - Author.pdf", Encoding.UTF8.GetBytes("second"));
+        var progress = new List<ImportProgress>();
+
+        var result = await service.ImportAsync([first, second], new SynchronousProgress<ImportProgress>(progress.Add), default);
+
+        result.Items.Should().HaveCount(2);
+        progress.Should().HaveCount(2);
+        progress[0].TotalCount.Should().Be(2);
+        progress[0].ProcessedCount.Should().Be(1);
+        progress[0].AddedCount.Should().Be(1);
+        progress[0].LatestItem!.SourcePath.Should().Be(first);
+        progress[1].ProcessedCount.Should().Be(2);
+        progress[1].AddedCount.Should().Be(2);
+    }
+
+    [Fact]
     public async Task Import_async_prefers_sidecar_metadata_when_available_next_to_source_file()
     {
         await using var fixture = await ImportServiceFixture.CreateAsync();
@@ -904,6 +925,11 @@ public sealed class ImportServiceTests
     private sealed class DuplicateKeyRaceClassifier : IImportExceptionClassifier
     {
         public bool IsDuplicateKeyViolation(Exception exception) => exception is DuplicateKeyRaceException;
+    }
+
+    private sealed class SynchronousProgress<T>(Action<T> onReport) : IProgress<T>
+    {
+        public void Report(T value) => onReport(value);
     }
 
     private sealed class ReturningMetadataSidecarStore(BookMetadata metadata) : IMetadataSidecarStore

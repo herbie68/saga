@@ -24,6 +24,12 @@ public sealed class ImportService(
 
     public async Task<ImportBatchResult> ImportAsync(
         IReadOnlyList<string> sourcePaths,
+        CancellationToken cancellationToken = default) =>
+        await ImportAsync(sourcePaths, progress: null, cancellationToken);
+
+    public async Task<ImportBatchResult> ImportAsync(
+        IReadOnlyList<string> sourcePaths,
+        IProgress<ImportProgress>? progress,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(sourcePaths);
@@ -39,6 +45,7 @@ public sealed class ImportService(
                 cancellationToken.ThrowIfCancellationRequested();
                 var item = await ImportSingleAsync(runId, sequence, sourcePaths[sequence], cancellationToken);
                 results.Add(item);
+                progress?.Report(ImportProgress.FromItems(runId, sourcePaths.Count, results));
             }
         }
         finally
