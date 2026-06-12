@@ -181,6 +181,22 @@ public sealed class LibraryViewModelTests
     }
 
     [Fact]
+    public async Task Latvian_language_filter_can_be_selected_without_crashing()
+    {
+        var latvian = CreateBook("Latvian Book", ["Author"], language: "lv");
+        var dutch = CreateBook("Dutch Book", ["Author"], language: "nl");
+        var viewModel = CreateViewModel([latvian, dutch]);
+
+        await viewModel.RefreshAsync();
+
+        var filter = viewModel.LanguageFilters.Single(filter => filter.Name == "lv");
+        filter.IsSelected = true;
+
+        viewModel.VisibleBooks.Should().ContainSingle()
+            .Which.Title.Should().Be("Latvian Book");
+    }
+
+    [Fact]
     public async Task Selected_filters_expand_results_across_facets()
     {
         var art = CreateBook("Art Book", ["Art Jefferson"]);
@@ -301,10 +317,12 @@ public sealed class LibraryViewModelTests
         await viewModel.RefreshAsync();
         var rename = viewModel.RenameLanguageFilterCommand.ExecuteAsync(
             viewModel.LanguageFilters.Single(filter => filter.Name == "en"));
-        await repository.BulkUpdateStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await repository.BeforeBulkUpdate.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         viewModel.IsCleaningMetadata.Should().BeTrue();
         viewModel.MetadataCleanupStatusText.Should().Be("Updating metadata...");
+        repository.ReleaseBeforeBulkUpdate();
+        await repository.BulkUpdateStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         repository.ReleaseBulkUpdate();
         await rename;
@@ -816,7 +834,12 @@ public sealed class LibraryViewModelTests
     private sealed class BlockingBulkScalarMetadataRepository(IReadOnlyList<Book> books)
         : BulkScalarMetadataRepository(books)
     {
+        private readonly TaskCompletionSource releaseBeforeBulkUpdate =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly TaskCompletionSource release =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource BeforeBulkUpdate { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public TaskCompletionSource BulkUpdateStarted { get; } =
@@ -828,11 +851,14 @@ public sealed class LibraryViewModelTests
             string? value,
             CancellationToken cancellationToken)
         {
+            BeforeBulkUpdate.TrySetResult();
+            await releaseBeforeBulkUpdate.Task.WaitAsync(cancellationToken);
             BulkUpdateStarted.TrySetResult();
             await release.Task.WaitAsync(cancellationToken);
             return await base.UpdateScalarMetadataAsync(bookIds, field, value, cancellationToken);
         }
 
+        public void ReleaseBeforeBulkUpdate() => releaseBeforeBulkUpdate.TrySetResult();
         public void ReleaseBulkUpdate() => release.TrySetResult();
     }
 

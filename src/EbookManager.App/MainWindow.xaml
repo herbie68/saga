@@ -181,7 +181,7 @@
             <ComboBoxItem Content="{loc:Loc Tags}"
                           Tag="{x:Static viewModels:LibrarySortOption.Category}" />
           </ComboBox>
-          <Expander Header="{loc:Loc Authors}" IsExpanded="True" Margin="0,0,0,6">
+          <Expander Header="{loc:Loc Authors}" IsExpanded="False" Margin="0,0,0,6">
             <ScrollViewer MaxHeight="180"
                           VerticalScrollBarVisibility="Auto">
               <ItemsControl ItemsSource="{Binding AuthorFilters}">

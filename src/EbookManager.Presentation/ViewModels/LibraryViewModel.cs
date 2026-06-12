@@ -660,25 +660,26 @@ public sealed partial class LibraryViewModel : ObservableObject
         bool remove,
         CancellationToken cancellationToken)
     {
-        var changedBooks = new List<Book>();
-        foreach (var book in books.Where(book => MetadataValueMatches(book, kind, oldValue)))
-        {
-            var updated = TryEditMetadataValue(book, kind, oldValue, replacementValue, remove);
-            if (!ReferenceEquals(updated, book))
-            {
-                changedBooks.Add(updated);
-            }
-        }
-
-        if (changedBooks.Count == 0)
-        {
-            return;
-        }
-
         IsCleaningMetadata = true;
         MetadataCleanupStatusText = "Updating metadata...";
+        await Task.Yield();
         try
         {
+            var changedBooks = new List<Book>();
+            foreach (var book in books.Where(book => MetadataValueMatches(book, kind, oldValue)))
+            {
+                var updated = TryEditMetadataValue(book, kind, oldValue, replacementValue, remove);
+                if (!ReferenceEquals(updated, book))
+                {
+                    changedBooks.Add(updated);
+                }
+            }
+
+            if (changedBooks.Count == 0)
+            {
+                return;
+            }
+
             if (TryGetScalarField(kind, out var scalarField) &&
                 bookRepository is IBookBulkMetadataRepository bulkRepository)
             {
