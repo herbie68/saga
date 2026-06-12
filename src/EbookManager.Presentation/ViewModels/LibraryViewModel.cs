@@ -26,7 +26,6 @@ public sealed partial class LibraryViewModel : ObservableObject
     private readonly IImportRepository? importRepository;
     private readonly LibraryService? libraryService;
     private readonly CurrentLibrary? currentLibrary;
-    private readonly BookService? bookService;
     private readonly ILibraryDatabaseInitializer? databaseInitializer;
     private readonly DirectoryScanner? directoryScanner;
     private readonly IAppSettingsStore? settingsStore;
@@ -44,7 +43,6 @@ public sealed partial class LibraryViewModel : ObservableObject
         IImportRepository? importRepository = null,
         LibraryService? libraryService = null,
         CurrentLibrary? currentLibrary = null,
-        BookService? bookService = null,
         ILibraryDatabaseInitializer? databaseInitializer = null,
         DirectoryScanner? directoryScanner = null,
         IAppSettingsStore? settingsStore = null)
@@ -58,7 +56,6 @@ public sealed partial class LibraryViewModel : ObservableObject
         this.importRepository = importRepository;
         this.libraryService = libraryService;
         this.currentLibrary = currentLibrary;
-        this.bookService = bookService;
         this.databaseInitializer = databaseInitializer;
         this.directoryScanner = directoryScanner;
         this.settingsStore = settingsStore;
@@ -657,12 +654,10 @@ public sealed partial class LibraryViewModel : ObservableObject
         bool remove,
         CancellationToken cancellationToken)
     {
-        var updatedBooks = new List<Book>(books.Count);
         var changedBooks = new List<Book>();
-        foreach (var book in books)
+        foreach (var book in books.Where(book => MetadataValueMatches(book, kind, oldValue)))
         {
             var updated = TryEditMetadataValue(book, kind, oldValue, replacementValue, remove);
-            updatedBooks.Add(updated);
             if (!ReferenceEquals(updated, book))
             {
                 changedBooks.Add(updated);
@@ -679,19 +674,8 @@ public sealed partial class LibraryViewModel : ObservableObject
         {
             try
             {
-                if (bookService is not null)
-                {
-                    var result = await bookService.SaveAsync(changedBook, cancellationToken);
-                    if (result.Status == BookSaveStatus.Succeeded)
-                    {
-                        persistedBooks.Add(changedBook);
-                    }
-                }
-                else
-                {
-                    await bookRepository.UpdateAsync(changedBook, cancellationToken);
-                    persistedBooks.Add(changedBook);
-                }
+                await bookRepository.UpdateAsync(changedBook, cancellationToken);
+                persistedBooks.Add(changedBook);
             }
             catch (BookConflictException)
             {
@@ -716,6 +700,39 @@ public sealed partial class LibraryViewModel : ObservableObject
 
         RefreshFacetFilters();
         ApplyFilter();
+    }
+
+    private static bool MetadataValueMatches(
+        Book book,
+        MetadataFilterKind kind,
+        string oldValue)
+    {
+        var metadata = book.Metadata;
+        return kind switch
+        {
+            MetadataFilterKind.Author => metadata.Authors.Any(value =>
+                string.Equals(value, oldValue, StringComparison.OrdinalIgnoreCase)),
+            MetadataFilterKind.Tag => (metadata.Tags ?? []).Any(value =>
+                string.Equals(value, oldValue, StringComparison.OrdinalIgnoreCase)),
+            MetadataFilterKind.Series => ScalarValueMatches(metadata.Series, oldValue),
+            MetadataFilterKind.Language => ScalarValueMatches(metadata.Language, oldValue, LanguageFilterKey),
+            _ => false
+        };
+    }
+
+    private static bool ScalarValueMatches(
+        string? source,
+        string oldValue,
+        Func<string?, string?>? comparisonKeySelector = null)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return false;
+        }
+
+        var sourceKey = comparisonKeySelector?.Invoke(source) ?? source.Trim();
+        var oldKey = comparisonKeySelector?.Invoke(oldValue) ?? oldValue.Trim();
+        return string.Equals(sourceKey, oldKey, StringComparison.OrdinalIgnoreCase);
     }
 
     private static Book TryEditMetadataValue(
