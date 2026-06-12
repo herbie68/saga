@@ -8,6 +8,20 @@ public enum ImportOutcome
     Failed
 }
 
+public enum ImportRunKind
+{
+    FileImport,
+    DirectoryScan
+}
+
+public sealed record ImportRunContext(
+    ImportRunKind Kind,
+    string? SourcePath = null,
+    bool? IncludeSubdirectories = null)
+{
+    public static ImportRunContext FileImport { get; } = new(ImportRunKind.FileImport);
+}
+
 public sealed record ImportItemResult(
     string SourcePath,
     ImportOutcome Outcome,
@@ -23,7 +37,8 @@ public sealed record ImportRunResult(
     Guid Id,
     DateTimeOffset StartedUtc,
     DateTimeOffset? CompletedUtc,
-    IReadOnlyList<ImportItemResult> Items);
+    IReadOnlyList<ImportItemResult> Items,
+    ImportRunContext? Context = null);
 
 public sealed record ImportRunSummary(
     Guid Id,
@@ -33,7 +48,8 @@ public sealed record ImportRunSummary(
     int AddedCount,
     int ExactDuplicateCount,
     int PossibleDuplicateCount,
-    int FailedCount)
+    int FailedCount,
+    ImportRunContext? Context = null)
 {
     public int SkippedCount => ExactDuplicateCount + PossibleDuplicateCount;
 }

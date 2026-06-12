@@ -104,6 +104,7 @@ public sealed class LibraryDbContext(DbContextOptions<LibraryDbContext> options)
         {
             importRun.ToTable("ImportRuns");
             importRun.HasKey(x => x.Id);
+            importRun.Property(x => x.Kind).IsRequired();
         });
 
         modelBuilder.Entity<ImportItemEntity>(importItem =>

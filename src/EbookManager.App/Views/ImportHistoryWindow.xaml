@@ -32,12 +32,22 @@
               GridLinesVisibility="Horizontal"
               HeadersVisibility="Column">
       <DataGrid.Columns>
+        <DataGridTextColumn Header="{loc:Loc Type}" Binding="{Binding KindText}" Width="110" />
+        <DataGridTextColumn Header="{loc:Loc Source}" Binding="{Binding SourceText}" Width="220">
+          <DataGridTextColumn.ElementStyle>
+            <Style TargetType="TextBlock">
+              <Setter Property="ToolTip" Value="{Binding SourceText}" />
+              <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            </Style>
+          </DataGridTextColumn.ElementStyle>
+        </DataGridTextColumn>
         <DataGridTextColumn Header="{loc:Loc Started}" Binding="{Binding StartedText}" Width="150" />
         <DataGridTextColumn Header="{loc:Loc Completed}" Binding="{Binding CompletedText}" Width="150" />
-        <DataGridTextColumn Header="{loc:Loc ImportTotal}" Binding="{Binding TotalCount}" Width="90" />
-        <DataGridTextColumn Header="{loc:Loc ImportAdded}" Binding="{Binding AddedCount}" Width="90" />
-        <DataGridTextColumn Header="{loc:Loc ImportDuplicates}" Binding="{Binding SkippedCount}" Width="100" />
-        <DataGridTextColumn Header="{loc:Loc Failed}" Binding="{Binding FailedCount}" Width="90" />
+        <DataGridTextColumn Header="{loc:Loc Duration}" Binding="{Binding DurationText}" Width="90" />
+        <DataGridTextColumn Header="{loc:Loc ImportTotal}" Binding="{Binding TotalCount}" Width="80" />
+        <DataGridTextColumn Header="{loc:Loc ImportAdded}" Binding="{Binding AddedCount}" Width="80" />
+        <DataGridTextColumn Header="{loc:Loc ImportDuplicates}" Binding="{Binding SkippedCount}" Width="90" />
+        <DataGridTextColumn Header="{loc:Loc Failed}" Binding="{Binding FailedCount}" Width="80" />
       </DataGrid.Columns>
     </DataGrid>
   </DockPanel>

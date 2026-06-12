@@ -13,13 +13,23 @@ public sealed class EfImportRepository(
     private readonly LibraryDbContextFactory contextFactory = contextFactory;
     private readonly string libraryPath = libraryPath;
 
-    public async Task<Guid> StartRunAsync(DateTimeOffset startedUtc, CancellationToken cancellationToken)
+    public Task<Guid> StartRunAsync(DateTimeOffset startedUtc, CancellationToken cancellationToken) =>
+        StartRunAsync(startedUtc, ImportRunContext.FileImport, cancellationToken);
+
+    public async Task<Guid> StartRunAsync(
+        DateTimeOffset startedUtc,
+        ImportRunContext? runContext,
+        CancellationToken cancellationToken)
     {
         await using var context = contextFactory.Create(libraryPath);
+        runContext ??= ImportRunContext.FileImport;
         var run = new ImportRunEntity
         {
             Id = Guid.NewGuid(),
-            StartedUtc = startedUtc
+            StartedUtc = startedUtc,
+            Kind = runContext.Kind.ToString(),
+            SourcePath = runContext.SourcePath,
+            IncludeSubdirectories = runContext.IncludeSubdirectories
         };
         context.ImportRuns.Add(run);
         await context.SaveChangesAsync(cancellationToken);
@@ -77,7 +87,7 @@ public sealed class EfImportRepository(
             .ToList()
             .AsReadOnly();
 
-        return new ImportRunResult(run.Id, run.StartedUtc, run.CompletedUtc, items);
+        return new ImportRunResult(run.Id, run.StartedUtc, run.CompletedUtc, items, ToContext(run));
     }
 
     public async Task<IReadOnlyList<ImportRunSummary>> ListRecentAsync(
@@ -104,8 +114,17 @@ public sealed class EfImportRepository(
                 x.Items.Count(item => item.Outcome == ImportOutcome.Added),
                 x.Items.Count(item => item.Outcome == ImportOutcome.ExactDuplicate),
                 x.Items.Count(item => item.Outcome == ImportOutcome.PossibleDuplicate),
-                x.Items.Count(item => item.Outcome == ImportOutcome.Failed)))
+                x.Items.Count(item => item.Outcome == ImportOutcome.Failed),
+                ToContext(x)))
             .ToList()
             .AsReadOnly();
+    }
+
+    private static ImportRunContext ToContext(ImportRunEntity run)
+    {
+        var kind = Enum.TryParse<ImportRunKind>(run.Kind, out var parsedKind)
+            ? parsedKind
+            : ImportRunKind.FileImport;
+        return new ImportRunContext(kind, run.SourcePath, run.IncludeSubdirectories);
     }
 }

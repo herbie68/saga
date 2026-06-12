@@ -48,12 +48,25 @@ public sealed class ImportRunSummaryViewModel(ImportRunSummary summary)
     public Guid RunId { get; } = summary.Id;
     public DateTimeOffset StartedUtc { get; } = summary.StartedUtc;
     public DateTimeOffset? CompletedUtc { get; } = summary.CompletedUtc;
+    public ImportRunContext? Context { get; } = summary.Context;
     public int TotalCount { get; } = summary.TotalCount;
     public int AddedCount { get; } = summary.AddedCount;
     public int SkippedCount { get; } = summary.SkippedCount;
     public int FailedCount { get; } = summary.FailedCount;
     public string StartedText { get; } = summary.StartedUtc.ToLocalTime().ToString("g");
     public string CompletedText { get; } = summary.CompletedUtc?.ToLocalTime().ToString("g") ?? string.Empty;
+    public string KindText { get; } = summary.Context?.Kind.ToString() ?? ImportRunKind.FileImport.ToString();
+    public string SourceText { get; } = string.IsNullOrWhiteSpace(summary.Context?.SourcePath)
+        ? string.Empty
+        : summary.Context.SourcePath;
+    public string DurationText { get; } = summary.CompletedUtc is null
+        ? string.Empty
+        : FormatDuration(summary.CompletedUtc.Value - summary.StartedUtc);
+
+    private static string FormatDuration(TimeSpan duration) =>
+        duration.TotalHours >= 1
+            ? duration.ToString(@"h\:mm\:ss")
+            : duration.ToString(@"m\:ss");
 }
 
 public sealed class ImportResultItemViewModel(ImportItemResult item)

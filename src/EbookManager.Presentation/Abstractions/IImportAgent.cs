@@ -16,7 +16,8 @@ public interface IImportAgent
     Task StartImportAsync(
         IReadOnlyList<string> sourcePaths,
         Func<ImportProgress, Task> onProgress,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        ImportRunContext? context = null);
 
     void CancelActiveJob();
 }

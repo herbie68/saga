@@ -426,6 +426,28 @@ public sealed class LibraryDbContextTests
     }
 
     [Fact]
+    public async Task Import_repository_persists_run_context_for_scan_history()
+    {
+        using var library = new TemporaryLibrary();
+        var libraryPath = library.DirectoryPath;
+        var factory = await CreateMigratedFactoryAsync(libraryPath);
+        var importRepository = new EfImportRepository(factory, libraryPath);
+        var context = new ImportRunContext(
+            ImportRunKind.DirectoryScan,
+            @"C:\Books",
+            IncludeSubdirectories: true);
+
+        var runId = await importRepository.StartRunAsync(DateTimeOffset.UtcNow, context, default);
+        await importRepository.RecordItemAsync(runId, 0, "book.epub", ImportOutcome.Added, "Imported", null, default);
+
+        var run = await importRepository.GetAsync(runId, default);
+        var summary = (await importRepository.ListRecentAsync(1, default)).Single();
+
+        run!.Context.Should().Be(context);
+        summary.Context.Should().Be(context);
+    }
+
+    [Fact]
     public async Task Books_reject_duplicate_logical_title_and_author_combinations()
     {
         using var library = new TemporaryLibrary();

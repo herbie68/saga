@@ -8,6 +8,7 @@ TestResults/
 
 # Visual Studio local state
 .vs/
+.idea/
 *.user
 *.suo
 

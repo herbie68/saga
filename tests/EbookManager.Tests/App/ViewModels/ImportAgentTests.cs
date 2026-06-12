@@ -103,7 +103,8 @@ public sealed class ImportAgentTests
         public Task<ImportBatchResult> ImportAsync(
             IReadOnlyList<string> sourcePaths,
             IProgress<ImportProgress>? progress,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            ImportRunContext? context = null)
         {
             var runId = Guid.NewGuid();
             var items = sourcePaths
@@ -125,7 +126,8 @@ public sealed class ImportAgentTests
         public async Task<ImportBatchResult> ImportAsync(
             IReadOnlyList<string> sourcePaths,
             IProgress<ImportProgress>? progress,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            ImportRunContext? context = null)
         {
             Started.SetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
@@ -138,7 +140,8 @@ public sealed class ImportAgentTests
         public Task<ImportBatchResult> ImportAsync(
             IReadOnlyList<string> sourcePaths,
             IProgress<ImportProgress>? progress,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            ImportRunContext? context = null)
         {
             var result = new ImportBatchResult(
                 Guid.NewGuid(),

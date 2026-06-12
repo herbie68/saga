@@ -730,6 +730,14 @@ public sealed class ImportServiceTests
             return inner.StartRunAsync(startedUtc, cancellationToken);
         }
 
+        public Task<Guid> StartRunAsync(
+            DateTimeOffset startedUtc,
+            ImportRunContext? context,
+            CancellationToken cancellationToken)
+        {
+            return inner.StartRunAsync(startedUtc, context, cancellationToken);
+        }
+
         public async Task RecordItemAsync(
             Guid runId,
             int sequence,
@@ -963,6 +971,16 @@ public sealed class ImportServiceTests
         public async Task<Guid> StartRunAsync(DateTimeOffset startedUtc, CancellationToken cancellationToken)
         {
             var runId = await inner.StartRunAsync(startedUtc, cancellationToken);
+            LastRunId = runId;
+            return runId;
+        }
+
+        public async Task<Guid> StartRunAsync(
+            DateTimeOffset startedUtc,
+            ImportRunContext? context,
+            CancellationToken cancellationToken)
+        {
+            var runId = await inner.StartRunAsync(startedUtc, context, cancellationToken);
             LastRunId = runId;
             return runId;
         }

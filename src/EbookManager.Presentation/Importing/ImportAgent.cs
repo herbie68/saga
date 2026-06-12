@@ -22,7 +22,8 @@ public sealed class ImportAgent(
     public Task StartImportAsync(
         IReadOnlyList<string> sourcePaths,
         Func<ImportProgress, Task> onProgress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ImportRunContext? context = null)
     {
         if (ActiveTask is { IsCompleted: false })
         {
@@ -31,7 +32,7 @@ public sealed class ImportAgent(
 
         activeCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         Job.StartImport(Guid.Empty, sourcePaths.Count);
-        ActiveTask = RunImportAsync(sourcePaths, onProgress, activeCancellation.Token);
+        ActiveTask = RunImportAsync(sourcePaths, onProgress, activeCancellation.Token, context);
         return Task.CompletedTask;
     }
 
@@ -54,7 +55,8 @@ public sealed class ImportAgent(
     private async Task RunImportAsync(
         IReadOnlyList<string> sourcePaths,
         Func<ImportProgress, Task> onProgress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ImportRunContext? context)
     {
         try
         {
@@ -63,7 +65,7 @@ public sealed class ImportAgent(
                 Job.ApplyProgress(snapshot);
                 _ = onProgress(snapshot);
             });
-            var result = await importRunner.ImportAsync(sourcePaths, progress, cancellationToken);
+            var result = await importRunner.ImportAsync(sourcePaths, progress, cancellationToken, context);
             if (result.WasCancelled)
             {
                 Job.Cancelled(result);

@@ -6,6 +6,11 @@ public interface IImportRepository
 {
     Task<Guid> StartRunAsync(DateTimeOffset startedUtc, CancellationToken cancellationToken);
 
+    Task<Guid> StartRunAsync(
+        DateTimeOffset startedUtc,
+        ImportRunContext? context,
+        CancellationToken cancellationToken);
+
     Task RecordItemAsync(
         Guid runId,
         int sequence,

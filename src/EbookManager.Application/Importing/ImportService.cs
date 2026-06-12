@@ -30,12 +30,13 @@ public sealed class ImportService(
     public async Task<ImportBatchResult> ImportAsync(
         IReadOnlyList<string> sourcePaths,
         IProgress<ImportProgress>? progress,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        ImportRunContext? context = null)
     {
         ArgumentNullException.ThrowIfNull(sourcePaths);
 
         var startedUtc = DateTimeOffset.UtcNow;
-        var runId = await importRepository.StartRunAsync(startedUtc, cancellationToken);
+        var runId = await importRepository.StartRunAsync(startedUtc, context, cancellationToken);
         var results = new List<ImportItemResult>(sourcePaths.Count);
         var addedCount = 0;
         var exactDuplicateCount = 0;

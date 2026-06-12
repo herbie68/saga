@@ -224,7 +224,8 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     public async Task ImportFilesAsync(
         IReadOnlyList<string> paths,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        ImportRunContext? context = null)
     {
         if (!HasActiveLibrary)
         {
@@ -239,12 +240,12 @@ public sealed partial class LibraryViewModel : ObservableObject
 
         if (importAgent is not null)
         {
-            await importAgent.StartImportAsync(paths, OnImportProgressAsync, cancellationToken);
+            await importAgent.StartImportAsync(paths, OnImportProgressAsync, cancellationToken, context ?? ImportRunContext.FileImport);
             OnPropertyChanged(nameof(HasActiveImport));
             return;
         }
 
-        var result = await importService!.ImportAsync(paths, cancellationToken);
+        var result = await importService!.ImportAsync(paths, progress: null, cancellationToken, context ?? ImportRunContext.FileImport);
         LastImportResult = new ImportResultViewModel(result);
         await userInteraction.ShowImportResultAsync(LastImportResult, cancellationToken);
         await RefreshAsync(cancellationToken);
@@ -275,7 +276,10 @@ public sealed partial class LibraryViewModel : ObservableObject
         var files = await Task.Run(
             () => directoryScanner.Scan(folder, includeSubdirectories, cancellationToken),
             cancellationToken);
-        await ImportFilesAsync(files, cancellationToken);
+        await ImportFilesAsync(
+            files,
+            cancellationToken,
+            new ImportRunContext(ImportRunKind.DirectoryScan, folder, includeSubdirectories));
     }
 
     private async Task<IReadOnlyList<Book>> LoadBooksAsync(CancellationToken cancellationToken)

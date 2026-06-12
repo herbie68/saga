@@ -14,6 +14,12 @@ public sealed class CurrentLibraryImportRepository(
     public Task<Guid> StartRunAsync(DateTimeOffset startedUtc, CancellationToken cancellationToken) =>
         CreateRepository().StartRunAsync(startedUtc, cancellationToken);
 
+    public Task<Guid> StartRunAsync(
+        DateTimeOffset startedUtc,
+        ImportRunContext? context,
+        CancellationToken cancellationToken) =>
+        CreateRepository().StartRunAsync(startedUtc, context, cancellationToken);
+
     public Task RecordItemAsync(
         Guid runId,
         int sequence,

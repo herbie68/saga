@@ -7,5 +7,6 @@ public interface IImportRunner
     Task<ImportBatchResult> ImportAsync(
         IReadOnlyList<string> sourcePaths,
         IProgress<ImportProgress>? progress,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        ImportRunContext? context = null);
 }

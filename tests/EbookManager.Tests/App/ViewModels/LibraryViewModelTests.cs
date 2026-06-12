@@ -1,4 +1,5 @@
 using EbookManager.Application.Books;
+using EbookManager.Application.Importing;
 using EbookManager.Domain.Abstractions;
 using EbookManager.Domain.Books;
 using EbookManager.Domain.Importing;
@@ -356,6 +357,32 @@ public sealed class LibraryViewModelTests
     }
 
     [Fact]
+    public async Task ScanFolderCommand_starts_import_with_directory_scan_context()
+    {
+        using var directory = new TemporaryDirectory();
+        var source = Path.Combine(directory.DirectoryPath, "book.epub");
+        File.WriteAllText(source, "book");
+        var interaction = new ScriptedUserInteractionService { ScanFolder = directory.DirectoryPath };
+        var agent = new ScriptedImportAgent();
+        var viewModel = CreateViewModel(
+            [],
+            interaction,
+            currentLibrary: CreateActiveLibrary(),
+            importAgent: agent,
+            directoryScanner: new DirectoryScanner(),
+            settingsStore: new InMemoryAppSettingsStore());
+
+        await viewModel.ScanFolderCommand.ExecuteAsync(null);
+
+        agent.StartScanningCalled.Should().BeTrue();
+        agent.StartedSourcePaths.Should().Equal(source);
+        agent.ImportContext.Should().Be(new ImportRunContext(
+            ImportRunKind.DirectoryScan,
+            directory.DirectoryPath,
+            IncludeSubdirectories: true));
+    }
+
+    [Fact]
     public async Task ImportFilesAsync_starts_background_import_without_refreshing_during_progress()
     {
         var initial = CreateBook("Existing", ["Author"]);
@@ -450,7 +477,8 @@ public sealed class LibraryViewModelTests
         IBookRepository? repository = null,
         BookDetailsViewModel? details = null,
         IImportAgent? importAgent = null,
-        IImportRepository? importRepository = null)
+        IImportRepository? importRepository = null,
+        DirectoryScanner? directoryScanner = null)
     {
         repository ??= new StaticBookRepository(books);
         details ??= new BookDetailsViewModel(new BookService(
@@ -465,6 +493,7 @@ public sealed class LibraryViewModelTests
             libraryService: libraryService,
             currentLibrary: currentLibrary,
             databaseInitializer: databaseInitializer,
+            directoryScanner: directoryScanner,
             settingsStore: settingsStore,
             importAgent: importAgent,
             importRepository: importRepository);
@@ -639,6 +668,7 @@ public sealed class LibraryViewModelTests
     private sealed class ScriptedUserInteractionService : IUserInteractionService
     {
         public string? LibraryDirectory { get; init; }
+        public string? ScanFolder { get; init; }
         public Guid? SelectedImportRunId { get; init; }
         public int PickBookFilesCalls { get; private set; }
         public int PickScanFolderCalls { get; private set; }
@@ -651,7 +681,7 @@ public sealed class LibraryViewModelTests
         public Task<string?> PickScanFolderAsync(CancellationToken cancellationToken)
         {
             PickScanFolderCalls++;
-            return Task.FromResult<string?>(null);
+            return Task.FromResult(ScanFolder);
         }
         public Task<string?> PickLibraryDirectoryAsync(string title, CancellationToken cancellationToken) =>
             Task.FromResult(LibraryDirectory);
@@ -681,6 +711,12 @@ public sealed class LibraryViewModelTests
         ImportRunResult? run = null) : IImportRepository
     {
         public Task<Guid> StartRunAsync(DateTimeOffset startedUtc, CancellationToken cancellationToken) =>
+            Task.FromResult(Guid.NewGuid());
+
+        public Task<Guid> StartRunAsync(
+            DateTimeOffset startedUtc,
+            ImportRunContext? context,
+            CancellationToken cancellationToken) =>
             Task.FromResult(Guid.NewGuid());
 
         public Task RecordItemAsync(
@@ -725,6 +761,8 @@ public sealed class LibraryViewModelTests
         public bool IsActive { get; private set; }
 
         public bool StartScanningCalled { get; private set; }
+        public IReadOnlyList<string> StartedSourcePaths { get; private set; } = [];
+        public ImportRunContext? ImportContext { get; private set; }
 
         public void StartScanning()
         {
@@ -735,9 +773,12 @@ public sealed class LibraryViewModelTests
         public Task StartImportAsync(
             IReadOnlyList<string> sourcePaths,
             Func<ImportProgress, Task> onProgress,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            ImportRunContext? context = null)
         {
             IsActive = true;
+            StartedSourcePaths = sourcePaths;
+            ImportContext = context;
             this.onProgress = onProgress;
             Job.StartImport(Guid.NewGuid(), sourcePaths.Count);
             return Task.CompletedTask;
