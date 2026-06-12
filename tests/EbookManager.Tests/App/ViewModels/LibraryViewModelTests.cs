@@ -208,6 +208,105 @@ public sealed class LibraryViewModelTests
     }
 
     [Fact]
+    public async Task Rename_author_filter_updates_all_matching_books_and_refreshes_filters()
+    {
+        var first = CreateBook("First", ["Ake Edwardson"]);
+        var second = CreateBook("Second", ["Ake Edwardson", "Other"]);
+        var repository = new StaticBookRepository([first, second]);
+        var interaction = new ScriptedUserInteractionService { PromptTextResult = "Åke Edwardson" };
+        var viewModel = CreateViewModel([first, second], interaction, repository: repository);
+
+        await viewModel.RefreshAsync();
+        await viewModel.RenameAuthorFilterCommand.ExecuteAsync(
+            viewModel.AuthorFilters.Single(filter => filter.Name == "Ake Edwardson"));
+
+        repository.BooksSnapshot.SelectMany(book => book.Metadata.Authors)
+            .Should().Contain("Åke Edwardson")
+            .And.NotContain("Ake Edwardson");
+        viewModel.AuthorFilters.Should().ContainSingle(filter => filter.Name == "Åke Edwardson" && filter.Count == 2);
+        viewModel.VisibleBooks.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task Remove_tag_filter_removes_value_from_all_matching_books_and_refreshes_filters()
+    {
+        var first = CreateBook("First", ["Author"], tags: ["Keep", "RemoveMe"]);
+        var second = CreateBook("Second", ["Author"], tags: ["RemoveMe"]);
+        var repository = new StaticBookRepository([first, second]);
+        var interaction = new ScriptedUserInteractionService { ConfirmMetadataValueRemovalResult = true };
+        var viewModel = CreateViewModel([first, second], interaction, repository: repository);
+
+        await viewModel.RefreshAsync();
+        await viewModel.RemoveTagFilterCommand.ExecuteAsync(
+            viewModel.CategoryFilters.Single(filter => filter.Name == "RemoveMe"));
+
+        repository.BooksSnapshot.SelectMany(book => book.Metadata.Tags ?? [])
+            .Should().NotContain("RemoveMe");
+        repository.BooksSnapshot.Single(book => book.Metadata.Title == "First").Metadata.Tags
+            .Should().Equal("Keep");
+        repository.BooksSnapshot.Single(book => book.Metadata.Title == "Second").Metadata.Tags
+            .Should().BeNull();
+        viewModel.CategoryFilters.Should().NotContain(filter => filter.Name == "RemoveMe");
+    }
+
+    [Fact]
+    public async Task Rename_series_filter_updates_matching_books()
+    {
+        var first = CreateBook("First", ["Author"], series: "Old Series");
+        var second = CreateBook("Second", ["Author"], series: "Other Series");
+        var repository = new StaticBookRepository([first, second]);
+        var interaction = new ScriptedUserInteractionService { PromptTextResult = "New Series" };
+        var viewModel = CreateViewModel([first, second], interaction, repository: repository);
+
+        await viewModel.RefreshAsync();
+        await viewModel.RenameSeriesFilterCommand.ExecuteAsync(
+            viewModel.SeriesFilters.Single(filter => filter.Name == "Old Series"));
+
+        repository.BooksSnapshot.Single(book => book.Metadata.Title == "First").Metadata.Series
+            .Should().Be("New Series");
+        repository.BooksSnapshot.Single(book => book.Metadata.Title == "Second").Metadata.Series
+            .Should().Be("Other Series");
+        viewModel.SeriesFilters.Should().ContainSingle(filter => filter.Name == "New Series");
+    }
+
+    [Fact]
+    public async Task Rename_language_filter_updates_all_values_in_the_same_language_group()
+    {
+        var first = CreateBook("First", ["Author"], language: "eng");
+        var second = CreateBook("Second", ["Author"], language: "en-US");
+        var repository = new StaticBookRepository([first, second]);
+        var interaction = new ScriptedUserInteractionService { PromptTextResult = "en" };
+        var viewModel = CreateViewModel([first, second], interaction, repository: repository);
+
+        await viewModel.RefreshAsync();
+        await viewModel.RenameLanguageFilterCommand.ExecuteAsync(
+            viewModel.LanguageFilters.Single(filter => filter.Name == "en"));
+
+        repository.BooksSnapshot.Select(book => book.Metadata.Language)
+            .Should().Equal("en", "en");
+        viewModel.LanguageFilters.Should().ContainSingle(filter => filter.Name == "en" && filter.Count == 2);
+    }
+
+    [Fact]
+    public async Task Rename_filter_skips_books_that_conflict_with_existing_metadata()
+    {
+        var first = CreateBook("Same Title", ["Old Author"]);
+        var second = CreateBook("Other Title", ["Old Author"]);
+        var repository = new ConflictingBookRepository([first, second], first.Id);
+        var interaction = new ScriptedUserInteractionService { PromptTextResult = "New Author" };
+        var viewModel = CreateViewModel([first, second], interaction, repository: repository);
+
+        await viewModel.RefreshAsync();
+        await viewModel.RenameAuthorFilterCommand.ExecuteAsync(
+            viewModel.AuthorFilters.Single(filter => filter.Name == "Old Author"));
+
+        repository.BooksSnapshot.Single(book => book.Id == first.Id).Metadata.Authors
+            .Should().Equal("Old Author");
+        repository.BooksSnapshot.Single(book => book.Id == second.Id).Metadata.Authors
+            .Should().Equal("New Author");
+    }
+
+    [Fact]
     public async Task Saved_details_refresh_visible_rows_and_filters()
     {
         var book = CreateBook("Original", ["Author"]);
@@ -616,12 +715,14 @@ public sealed class LibraryViewModelTests
     {
         protected readonly List<Book> Books = [.. books];
 
+        public IReadOnlyList<Book> BooksSnapshot => [.. Books];
+
         public virtual Task<IReadOnlyList<Book>> ListAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Book>>([.. Books]);
         public Task<Book?> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(Books.SingleOrDefault(book => book.Id == id));
         public Task<bool> HasHashAsync(string sha256, CancellationToken cancellationToken) => Task.FromResult(false);
         public Task<bool> HasNormalizedTitleAndAuthorAsync(string title, IReadOnlyList<string> authors, CancellationToken cancellationToken) => Task.FromResult(false);
         public Task AddAsync(Book book, BookFile file, CancellationToken cancellationToken) => Task.CompletedTask;
-        public Task UpdateAsync(Book book, CancellationToken cancellationToken)
+        public virtual Task UpdateAsync(Book book, CancellationToken cancellationToken)
         {
             var index = Books.FindIndex(existing => existing.Id == book.Id);
             if (index >= 0)
@@ -659,6 +760,21 @@ public sealed class LibraryViewModelTests
         {
             ListCalls++;
             return Task.FromResult<IReadOnlyList<Book>>(ListCalls == 1 ? firstRefreshBooks : laterRefreshBooks);
+        }
+    }
+
+    private sealed class ConflictingBookRepository(
+        IReadOnlyList<Book> books,
+        Guid conflictingBookId) : StaticBookRepository(books)
+    {
+        public override Task UpdateAsync(Book book, CancellationToken cancellationToken)
+        {
+            if (book.Id == conflictingBookId)
+            {
+                throw new BookConflictException();
+            }
+
+            return base.UpdateAsync(book, cancellationToken);
         }
     }
 
@@ -767,6 +883,8 @@ public sealed class LibraryViewModelTests
     {
         public string? LibraryDirectory { get; init; }
         public string? ScanFolder { get; init; }
+        public string? PromptTextResult { get; init; }
+        public bool ConfirmMetadataValueRemovalResult { get; init; }
         public Guid? SelectedImportRunId { get; init; }
         public int PickBookFilesCalls { get; private set; }
         public int PickScanFolderCalls { get; private set; }
@@ -785,6 +903,19 @@ public sealed class LibraryViewModelTests
             Task.FromResult(LibraryDirectory);
 
         public Task<bool> ConfirmDeleteAsync(string title, CancellationToken cancellationToken) => Task.FromResult(true);
+        public Task<string?> PromptTextAsync(
+            string title,
+            string message,
+            string initialValue,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(PromptTextResult);
+
+        public Task<bool> ConfirmMetadataValueRemovalAsync(
+            string value,
+            int affectedBookCount,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(ConfirmMetadataValueRemovalResult);
+
         public Task ShowImportResultAsync(ImportResultViewModel result, CancellationToken cancellationToken)
         {
             ShownImportResult = result;

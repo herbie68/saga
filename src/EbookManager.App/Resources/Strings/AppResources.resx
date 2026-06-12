@@ -32,6 +32,11 @@
   <data name="File" xml:space="preserve"><value>File</value></data>
   <data name="FilterHelp" xml:space="preserve"><value>Filters are based on metadata found during import.</value></data>
   <data name="Filters" xml:space="preserve"><value>Filters</value></data>
+  <data name="FilterRenameTitle" xml:space="preserve"><value>Rename metadata value</value></data>
+  <data name="FilterRenameMessage" xml:space="preserve"><value>Rename "{0}" to:</value></data>
+  <data name="FilterRemoveConfirmationTitle" xml:space="preserve"><value>Remove metadata value</value></data>
+  <data name="FilterRemoveConfirmationMessage" xml:space="preserve"><value>Remove "{0}" from {1} book(s)?</value></data>
+  <data name="Rename" xml:space="preserve"><value>Rename</value></data>
   <data name="ImportAdded" xml:space="preserve"><value>Added</value></data>
   <data name="ImportDuplicates" xml:space="preserve"><value>Duplicates</value></data>
   <data name="ImportExactDuplicate" xml:space="preserve"><value>Exact duplicate</value></data>

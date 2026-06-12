@@ -186,8 +186,20 @@
                   <DataTemplate>
                     <CheckBox Content="{Binding DisplayName}"
                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                               Margin="0,2"
-                              Foreground="{DynamicResource TextSecondaryBrush}" />
+                              Foreground="{DynamicResource TextSecondaryBrush}">
+                      <CheckBox.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Header="{loc:Loc Rename}"
+                                    Command="{Binding PlacementTarget.Tag.RenameAuthorFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                          <MenuItem Header="{loc:Loc Delete}"
+                                    Command="{Binding PlacementTarget.Tag.RemoveAuthorFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        </ContextMenu>
+                      </CheckBox.ContextMenu>
+                    </CheckBox>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
@@ -201,8 +213,20 @@
                   <DataTemplate>
                     <CheckBox Content="{Binding DisplayName}"
                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                               Margin="0,2"
-                              Foreground="{DynamicResource TextSecondaryBrush}" />
+                              Foreground="{DynamicResource TextSecondaryBrush}">
+                      <CheckBox.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Header="{loc:Loc Rename}"
+                                    Command="{Binding PlacementTarget.Tag.RenameSeriesFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                          <MenuItem Header="{loc:Loc Delete}"
+                                    Command="{Binding PlacementTarget.Tag.RemoveSeriesFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        </ContextMenu>
+                      </CheckBox.ContextMenu>
+                    </CheckBox>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
@@ -216,8 +240,20 @@
                   <DataTemplate>
                     <CheckBox Content="{Binding DisplayName}"
                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                               Margin="0,2"
-                              Foreground="{DynamicResource TextSecondaryBrush}" />
+                              Foreground="{DynamicResource TextSecondaryBrush}">
+                      <CheckBox.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Header="{loc:Loc Rename}"
+                                    Command="{Binding PlacementTarget.Tag.RenameTagFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                          <MenuItem Header="{loc:Loc Delete}"
+                                    Command="{Binding PlacementTarget.Tag.RemoveTagFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        </ContextMenu>
+                      </CheckBox.ContextMenu>
+                    </CheckBox>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
@@ -246,8 +282,20 @@
                   <DataTemplate>
                     <CheckBox Content="{Binding DisplayName}"
                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                               Margin="0,2"
-                              Foreground="{DynamicResource TextSecondaryBrush}" />
+                              Foreground="{DynamicResource TextSecondaryBrush}">
+                      <CheckBox.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Header="{loc:Loc Rename}"
+                                    Command="{Binding PlacementTarget.Tag.RenameLanguageFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                          <MenuItem Header="{loc:Loc Delete}"
+                                    Command="{Binding PlacementTarget.Tag.RemoveLanguageFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        </ContextMenu>
+                      </CheckBox.ContextMenu>
+                    </CheckBox>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>

@@ -25,6 +25,7 @@ Milestone 3 builds on version `0.1` with Calibre metadata import and metadata-qu
 - portable `metadata.json` sidecar metadata
 - searchable library viewmodels
 - editable metadata details with save, undo, and delete services
+- filter context-menu cleanup for authors, series, tags, and languages
 - WPF workspace with bookshelf, detailed grid, and list views
 - light, dark, sepia, blue, and red themes
 - English and Dutch selectable UI localization
@@ -113,7 +114,7 @@ The following remain later-version candidates:
 - import history redo action for failed items or failed runs
 - import history diagnostics with per-item duration, file size, and format for slow-file analysis
 - optional cloud-file hydration for OneDrive files that are not available locally
-- context-menu actions on filters to rename or remove authors, series, tags, languages, and other metadata values across affected books
+- richer metadata cleanup tools, including duplicate-aware merge flows and more bulk-edit diagnostics
 - user-defined views
 - ebook conversion
 - full-text search inside book contents

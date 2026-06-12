@@ -24,6 +24,8 @@ Use this checklist for Calibre metadata import testing.
 - Import `[Atlanta 01] - Triptiek.epub` without stronger series metadata and confirm title `Triptiek`, series `Atlanta`, and series number `1`.
 - Import a book with author `Slaughter, Karin` and confirm the author is stored as `Karin Slaughter`.
 - Import a book with a non-numeric OPF series index and confirm the series number remains empty.
+- Right-click an author, series, tag, or language filter and confirm Rename updates all matching books and refreshes the filters.
+- Right-click a tag or series filter and confirm Delete removes that metadata value from matching books after confirmation.
 
 ## Regression
 

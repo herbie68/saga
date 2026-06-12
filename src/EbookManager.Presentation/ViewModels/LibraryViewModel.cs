@@ -26,6 +26,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     private readonly IImportRepository? importRepository;
     private readonly LibraryService? libraryService;
     private readonly CurrentLibrary? currentLibrary;
+    private readonly BookService? bookService;
     private readonly ILibraryDatabaseInitializer? databaseInitializer;
     private readonly DirectoryScanner? directoryScanner;
     private readonly IAppSettingsStore? settingsStore;
@@ -43,6 +44,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         IImportRepository? importRepository = null,
         LibraryService? libraryService = null,
         CurrentLibrary? currentLibrary = null,
+        BookService? bookService = null,
         ILibraryDatabaseInitializer? databaseInitializer = null,
         DirectoryScanner? directoryScanner = null,
         IAppSettingsStore? settingsStore = null)
@@ -56,6 +58,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         this.importRepository = importRepository;
         this.libraryService = libraryService;
         this.currentLibrary = currentLibrary;
+        this.bookService = bookService;
         this.databaseInitializer = databaseInitializer;
         this.directoryScanner = directoryScanner;
         this.settingsStore = settingsStore;
@@ -142,6 +145,22 @@ public sealed partial class LibraryViewModel : ObservableObject
     public IAsyncRelayCommand ShowImportDetailsCommand => showImportDetailsCommand ??= new AsyncRelayCommand(ShowImportDetailsAsync);
     public IAsyncRelayCommand ShowImportHistoryCommand => showImportHistoryCommand ??= new AsyncRelayCommand(ShowImportHistoryAsync);
     public IRelayCommand CloseImportJobCommand => closeImportJobCommand ??= new RelayCommand(() => importAgent?.Job.Close());
+    public IAsyncRelayCommand<FacetFilterViewModel> RenameAuthorFilterCommand =>
+        renameAuthorFilterCommand ??= new AsyncRelayCommand<FacetFilterViewModel>(filter => RenameFilterValueAsync(filter, MetadataFilterKind.Author));
+    public IAsyncRelayCommand<FacetFilterViewModel> RemoveAuthorFilterCommand =>
+        removeAuthorFilterCommand ??= new AsyncRelayCommand<FacetFilterViewModel>(filter => RemoveFilterValueAsync(filter, MetadataFilterKind.Author));
+    public IAsyncRelayCommand<FacetFilterViewModel> RenameSeriesFilterCommand =>
+        renameSeriesFilterCommand ??= new AsyncRelayCommand<FacetFilterViewModel>(filter => RenameFilterValueAsync(filter, MetadataFilterKind.Series));
+    public IAsyncRelayCommand<FacetFilterViewModel> RemoveSeriesFilterCommand =>
+        removeSeriesFilterCommand ??= new AsyncRelayCommand<FacetFilterViewModel>(filter => RemoveFilterValueAsync(filter, MetadataFilterKind.Series));
+    public IAsyncRelayCommand<FacetFilterViewModel> RenameTagFilterCommand =>
+        renameTagFilterCommand ??= new AsyncRelayCommand<FacetFilterViewModel>(filter => RenameFilterValueAsync(filter, MetadataFilterKind.Tag));
+    public IAsyncRelayCommand<FacetFilterViewModel> RemoveTagFilterCommand =>
+        removeTagFilterCommand ??= new AsyncRelayCommand<FacetFilterViewModel>(filter => RemoveFilterValueAsync(filter, MetadataFilterKind.Tag));
+    public IAsyncRelayCommand<FacetFilterViewModel> RenameLanguageFilterCommand =>
+        renameLanguageFilterCommand ??= new AsyncRelayCommand<FacetFilterViewModel>(filter => RenameFilterValueAsync(filter, MetadataFilterKind.Language));
+    public IAsyncRelayCommand<FacetFilterViewModel> RemoveLanguageFilterCommand =>
+        removeLanguageFilterCommand ??= new AsyncRelayCommand<FacetFilterViewModel>(filter => RemoveFilterValueAsync(filter, MetadataFilterKind.Language));
 
     private AsyncRelayCommand? refreshCommand;
     private AsyncRelayCommand? addBooksCommand;
@@ -152,6 +171,14 @@ public sealed partial class LibraryViewModel : ObservableObject
     private AsyncRelayCommand? showImportDetailsCommand;
     private AsyncRelayCommand? showImportHistoryCommand;
     private RelayCommand? closeImportJobCommand;
+    private AsyncRelayCommand<FacetFilterViewModel>? renameAuthorFilterCommand;
+    private AsyncRelayCommand<FacetFilterViewModel>? removeAuthorFilterCommand;
+    private AsyncRelayCommand<FacetFilterViewModel>? renameSeriesFilterCommand;
+    private AsyncRelayCommand<FacetFilterViewModel>? removeSeriesFilterCommand;
+    private AsyncRelayCommand<FacetFilterViewModel>? renameTagFilterCommand;
+    private AsyncRelayCommand<FacetFilterViewModel>? removeTagFilterCommand;
+    private AsyncRelayCommand<FacetFilterViewModel>? renameLanguageFilterCommand;
+    private AsyncRelayCommand<FacetFilterViewModel>? removeLanguageFilterCommand;
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
@@ -569,6 +596,252 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
     }
 
+    private async Task RenameFilterValueAsync(
+        FacetFilterViewModel? filter,
+        MetadataFilterKind kind)
+    {
+        if (filter is null)
+        {
+            return;
+        }
+
+        var newValue = await userInteraction.PromptTextAsync(
+            "Rename metadata value",
+            $"Rename '{filter.Name}' to:",
+            filter.Name,
+            CancellationToken.None);
+        if (string.IsNullOrWhiteSpace(newValue) ||
+            (kind != MetadataFilterKind.Language &&
+                string.Equals(filter.Name, newValue.Trim(), StringComparison.Ordinal)))
+        {
+            return;
+        }
+
+        await ApplyMetadataValueEditAsync(
+            kind,
+            filter.Name,
+            replacementValue: newValue.Trim(),
+            remove: false,
+            CancellationToken.None);
+    }
+
+    private async Task RemoveFilterValueAsync(
+        FacetFilterViewModel? filter,
+        MetadataFilterKind kind)
+    {
+        if (filter is null)
+        {
+            return;
+        }
+
+        if (!await userInteraction.ConfirmMetadataValueRemovalAsync(
+                filter.Name,
+                filter.Count,
+                CancellationToken.None))
+        {
+            return;
+        }
+
+        await ApplyMetadataValueEditAsync(
+            kind,
+            filter.Name,
+            replacementValue: null,
+            remove: true,
+            CancellationToken.None);
+    }
+
+    private async Task ApplyMetadataValueEditAsync(
+        MetadataFilterKind kind,
+        string oldValue,
+        string? replacementValue,
+        bool remove,
+        CancellationToken cancellationToken)
+    {
+        var updatedBooks = new List<Book>(books.Count);
+        var changedBooks = new List<Book>();
+        foreach (var book in books)
+        {
+            var updated = TryEditMetadataValue(book, kind, oldValue, replacementValue, remove);
+            updatedBooks.Add(updated);
+            if (!ReferenceEquals(updated, book))
+            {
+                changedBooks.Add(updated);
+            }
+        }
+
+        if (changedBooks.Count == 0)
+        {
+            return;
+        }
+
+        var persistedBooks = new List<Book>(changedBooks.Count);
+        foreach (var changedBook in changedBooks)
+        {
+            try
+            {
+                if (bookService is not null)
+                {
+                    var result = await bookService.SaveAsync(changedBook, cancellationToken);
+                    if (result.Status == BookSaveStatus.Succeeded)
+                    {
+                        persistedBooks.Add(changedBook);
+                    }
+                }
+                else
+                {
+                    await bookRepository.UpdateAsync(changedBook, cancellationToken);
+                    persistedBooks.Add(changedBook);
+                }
+            }
+            catch (BookConflictException)
+            {
+                // Keep the original book unchanged when a bulk cleanup would create a duplicate.
+            }
+        }
+
+        if (persistedBooks.Count == 0)
+        {
+            return;
+        }
+
+        var persistedById = persistedBooks.ToDictionary(book => book.Id);
+        books = books
+            .Select(book => persistedById.GetValueOrDefault(book.Id) ?? book)
+            .ToList();
+        if (SelectedBook is { } selected &&
+            persistedById.GetValueOrDefault(selected.Id) is { } selectedChangedBook)
+        {
+            Details.Load(selectedChangedBook);
+        }
+
+        RefreshFacetFilters();
+        ApplyFilter();
+    }
+
+    private static Book TryEditMetadataValue(
+        Book book,
+        MetadataFilterKind kind,
+        string oldValue,
+        string? replacementValue,
+        bool remove)
+    {
+        var metadata = book.Metadata;
+        return kind switch
+        {
+            MetadataFilterKind.Author => ReplaceListValue(
+                    metadata.Authors,
+                    oldValue,
+                    replacementValue,
+                    remove,
+                    out var authors)
+                ? book with { Metadata = CopyMetadata(metadata, authors, metadata.Tags, metadata.Series, metadata.Language) }
+                : book,
+            MetadataFilterKind.Tag => ReplaceListValue(
+                    metadata.Tags ?? [],
+                    oldValue,
+                    replacementValue,
+                    remove,
+                    out var tags)
+                ? book with { Metadata = CopyMetadata(metadata, metadata.Authors, tags.Count == 0 ? null : tags, metadata.Series, metadata.Language) }
+                : book,
+            MetadataFilterKind.Series => ReplaceScalarValue(
+                    metadata.Series,
+                    oldValue,
+                    replacementValue,
+                    remove,
+                    out var series)
+                ? book with { Metadata = CopyMetadata(metadata, metadata.Authors, metadata.Tags, series, metadata.Language) }
+                : book,
+            MetadataFilterKind.Language => ReplaceScalarValue(
+                    metadata.Language,
+                    oldValue,
+                    replacementValue,
+                    remove,
+                    out var language,
+                    LanguageFilterKey)
+                ? book with { Metadata = CopyMetadata(metadata, metadata.Authors, metadata.Tags, metadata.Series, language) }
+                : book,
+            _ => book
+        };
+    }
+
+    private static bool ReplaceListValue(
+        IReadOnlyList<string> source,
+        string oldValue,
+        string? replacementValue,
+        bool remove,
+        out IReadOnlyList<string> updated)
+    {
+        var changed = false;
+        var values = new List<string>();
+        foreach (var value in source)
+        {
+            if (string.Equals(value, oldValue, StringComparison.OrdinalIgnoreCase))
+            {
+                changed = true;
+                if (!remove && !string.IsNullOrWhiteSpace(replacementValue))
+                {
+                    values.Add(replacementValue.Trim());
+                }
+            }
+            else
+            {
+                values.Add(value);
+            }
+        }
+
+        updated = values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return changed;
+    }
+
+    private static bool ReplaceScalarValue(
+        string? source,
+        string oldValue,
+        string? replacementValue,
+        bool remove,
+        out string? updated,
+        Func<string?, string?>? comparisonKeySelector = null)
+    {
+        updated = source;
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return false;
+        }
+
+        var sourceKey = comparisonKeySelector?.Invoke(source) ?? source.Trim();
+        var oldKey = comparisonKeySelector?.Invoke(oldValue) ?? oldValue.Trim();
+        if (!string.Equals(sourceKey, oldKey, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        updated = remove ? null : replacementValue?.Trim();
+        return true;
+    }
+
+    private static BookMetadata CopyMetadata(
+        BookMetadata metadata,
+        IReadOnlyList<string> authors,
+        IReadOnlyList<string>? tags,
+        string? series,
+        string? language) =>
+        new(
+            metadata.Title,
+            authors,
+            metadata.Description,
+            language,
+            metadata.Publisher,
+            metadata.PublicationDate,
+            tags,
+            series,
+            metadata.SeriesNumber,
+            metadata.Isbn,
+            metadata.CoverBytes);
+
     private static IEnumerable<BookRowViewModel> ApplySort(
         IEnumerable<BookRowViewModel> rows,
         LibrarySortOption sortOption)
@@ -713,5 +986,13 @@ public sealed partial class LibraryViewModel : ObservableObject
 
         LastImportResult = new ImportResultViewModel(run);
         await userInteraction.ShowImportResultAsync(LastImportResult, cancellationToken);
+    }
+
+    private enum MetadataFilterKind
+    {
+        Author,
+        Series,
+        Tag,
+        Language
     }
 }

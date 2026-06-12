@@ -32,6 +32,11 @@
   <data name="File" xml:space="preserve"><value>Bestand</value></data>
   <data name="FilterHelp" xml:space="preserve"><value>Filters zijn gebaseerd op metadata die tijdens import is gevonden.</value></data>
   <data name="Filters" xml:space="preserve"><value>Filters</value></data>
+  <data name="FilterRenameTitle" xml:space="preserve"><value>Metadatawaarde hernoemen</value></data>
+  <data name="FilterRenameMessage" xml:space="preserve"><value>Hernoem "{0}" naar:</value></data>
+  <data name="FilterRemoveConfirmationTitle" xml:space="preserve"><value>Metadatawaarde verwijderen</value></data>
+  <data name="FilterRemoveConfirmationMessage" xml:space="preserve"><value>Verwijder "{0}" uit {1} boek(en)?</value></data>
+  <data name="Rename" xml:space="preserve"><value>Hernoemen</value></data>
   <data name="ImportAdded" xml:space="preserve"><value>Toegevoegd</value></data>
   <data name="ImportDuplicates" xml:space="preserve"><value>Duplicaten</value></data>
   <data name="ImportExactDuplicate" xml:space="preserve"><value>Exact duplicaat</value></data>

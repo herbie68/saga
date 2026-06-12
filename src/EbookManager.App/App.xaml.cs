@@ -107,6 +107,7 @@ public partial class App : System.Windows.Application
             provider.GetService<IImportRepository>(),
             provider.GetService<LibraryService>(),
             provider.GetService<CurrentLibrary>(),
+            provider.GetService<BookService>(),
             provider.GetService<ILibraryDatabaseInitializer>(),
             provider.GetService<DirectoryScanner>(),
             provider.GetRequiredService<IAppSettingsStore>()));
