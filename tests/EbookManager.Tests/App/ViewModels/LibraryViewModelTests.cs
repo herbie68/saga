@@ -65,6 +65,7 @@ public sealed class LibraryViewModelTests
 
         var refresh = viewModel.RefreshAsync();
         await repository.FirstPageLoaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await WaitUntilAsync(() => viewModel.LoadedLibraryCount == 500);
 
         viewModel.IsLoadingLibrary.Should().BeTrue();
         viewModel.LoadingLibraryTotalCount.Should().Be(1_200);
@@ -421,10 +422,26 @@ public sealed class LibraryViewModelTests
         await viewModel.RefreshAsync();
         await viewModel.ImportFilesAsync(["book.epub"]);
         await agent.CompleteAsync(result);
+        await WaitUntilAsync(() => viewModel.VisibleBooks.Any(book => book.Title == "Imported"));
 
         viewModel.LastImportResult.Should().NotBeNull();
         viewModel.LastImportResult!.TotalCount.Should().Be(1);
         viewModel.VisibleBooks.Select(book => book.Title).Should().Contain("Imported");
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (!condition())
+        {
+            if (DateTimeOffset.UtcNow >= deadline)
+            {
+                condition().Should().BeTrue();
+                return;
+            }
+
+            await Task.Delay(25);
+        }
     }
 
     [Fact]

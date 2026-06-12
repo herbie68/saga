@@ -727,6 +727,24 @@ public sealed class ImportPrimitivesTests : IDisposable
     }
 
     [Fact]
+    public async Task Cbz_adapter_skips_cover_extraction_when_archive_exceeds_fast_metadata_limit()
+    {
+        byte[] coverBytes = [0x11, 0x22];
+        var path = CreateArchive("Large Comic - Artist.cbz", archive =>
+        {
+            AddBinaryEntry(archive, "images/cover.jpg", coverBytes);
+        });
+        var adapter = new CbzMetadataAdapter(maxArchiveSizeForCoverExtractionBytes: 1);
+
+        var result = await adapter.ReadAsync(path, EbookFormat.Cbz, default);
+
+        result.Metadata.Title.Should().Be("Large Comic");
+        result.Metadata.Authors.Should().Equal("Artist");
+        result.Metadata.CoverBytes.Should().BeNull();
+        result.Warning.Should().Be("CBZ cover extraction skipped for large archive.");
+    }
+
+    [Fact]
     public async Task Cbz_adapter_rejects_archives_with_too_many_entries()
     {
         var path = CreateArchive("TooMany.cbz", archive =>

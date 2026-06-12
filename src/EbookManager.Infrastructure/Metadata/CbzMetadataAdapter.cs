@@ -9,6 +9,7 @@ public sealed class CbzMetadataAdapter : IMetadataAdapter
 {
     private const int MaxEntryCount = 2000;
     private const long MaxSelectedImageSizeBytes = 10 * 1024 * 1024;
+    private const long DefaultMaxArchiveSizeForCoverExtractionBytes = 64 * 1024 * 1024;
 
     private static readonly HashSet<string> SupportedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -19,6 +20,13 @@ public sealed class CbzMetadataAdapter : IMetadataAdapter
     };
 
     private readonly FallbackMetadataAdapter fallback = new();
+    private readonly long maxArchiveSizeForCoverExtractionBytes;
+
+    public CbzMetadataAdapter(long maxArchiveSizeForCoverExtractionBytes = DefaultMaxArchiveSizeForCoverExtractionBytes)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(maxArchiveSizeForCoverExtractionBytes);
+        this.maxArchiveSizeForCoverExtractionBytes = maxArchiveSizeForCoverExtractionBytes;
+    }
 
     public bool CanHandle(EbookFormat format) => format == EbookFormat.Cbz;
 
@@ -29,11 +37,19 @@ public sealed class CbzMetadataAdapter : IMetadataAdapter
     {
         cancellationToken.ThrowIfCancellationRequested();
         var fallbackResult = await fallback.ReadAsync(path, format, cancellationToken);
+        var fileInfo = new FileInfo(Path.GetFullPath(path));
+        if (fileInfo.Length > maxArchiveSizeForCoverExtractionBytes)
+        {
+            return fallbackResult with
+            {
+                Warning = "CBZ cover extraction skipped for large archive."
+            };
+        }
 
         try
         {
             await using var stream = new FileStream(
-                Path.GetFullPath(path),
+                fileInfo.FullName,
                 new FileStreamOptions
                 {
                     Access = FileAccess.Read,
