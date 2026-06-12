@@ -122,6 +122,9 @@ namespace EbookManager.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("NormalizedTitle");
 
+                    b.HasIndex("NormalizedTitle", "Id")
+                        .HasDatabaseName("IX_Books_NormalizedTitle_Id");
+
                     b.ToTable("Books", (string)null);
                 });
 

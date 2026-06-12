@@ -136,6 +136,24 @@ public sealed class LibraryDbContextTests
     }
 
     [Fact]
+    public async Task ListPageAsync_orders_by_normalized_title_for_indexed_library_loading()
+    {
+        using var library = new TemporaryLibrary();
+        var factory = await CreateMigratedFactoryAsync(library.DirectoryPath);
+        var repository = new EfBookRepository(factory, library.DirectoryPath);
+        var first = CreateBook("apple", ["Author"], coverBytes: [1, 2, 3]);
+        var second = CreateBook("Banana", ["Author"], coverBytes: [4, 5, 6]);
+
+        await repository.AddAsync(second, CreateFile(second.Id, Hash('B')), default);
+        await repository.AddAsync(first, CreateFile(first.Id, Hash('A')), default);
+
+        var page = await repository.ListPageAsync(0, 10, default);
+
+        page.Select(x => x.Metadata.Title).Should().Equal("apple", "Banana");
+        page.Select(x => x.Metadata.CoverBytes).Should().OnlyContain(coverBytes => coverBytes == null);
+    }
+
+    [Fact]
     public async Task Update_preserves_metadata_order_and_refreshes_shared_display_casing()
     {
         using var library = new TemporaryLibrary();
@@ -583,6 +601,42 @@ public sealed class LibraryDbContextTests
         indexes.Should().Contain(index =>
             index.Properties.Select(property => property.Name).SequenceEqual(
                 new[] { nameof(BookEntity.NormalizedTitle) }));
+    }
+
+    [Fact]
+    public async Task Model_indexes_library_list_sort_key_for_paged_loading()
+    {
+        using var library = new TemporaryLibrary();
+        var factory = await CreateMigratedFactoryAsync(library.DirectoryPath);
+        await using var context = factory.Create(library.DirectoryPath);
+
+        var indexes = context.Model.FindEntityType(typeof(BookEntity))!.GetIndexes();
+
+        indexes.Should().Contain(index =>
+            index.Properties.Select(property => property.Name).SequenceEqual(
+                new[] { nameof(BookEntity.NormalizedTitle), nameof(BookEntity.Id) }));
+    }
+
+    [Fact]
+    public async Task Migration_creates_library_list_sort_index_on_disk()
+    {
+        using var library = new TemporaryLibrary();
+        var factory = await CreateMigratedFactoryAsync(library.DirectoryPath);
+        await using var context = factory.Create(library.DirectoryPath);
+        var connection = (SqliteConnection)context.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT sql
+            FROM sqlite_master
+            WHERE type = 'index' AND name = 'IX_Books_NormalizedTitle_Id'
+            """;
+
+        var indexSql = (string?)await command.ExecuteScalarAsync();
+
+        indexSql.Should().Be(
+            "CREATE INDEX \"IX_Books_NormalizedTitle_Id\" ON \"Books\" (\"NormalizedTitle\", \"Id\")");
     }
 
     [Fact]

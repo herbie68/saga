@@ -32,6 +32,8 @@ public sealed class LibraryDbContext(DbContextOptions<LibraryDbContext> options)
             book.Property(x => x.NormalizedTitle).IsRequired();
             book.Property(x => x.DuplicateKey).IsRequired();
             book.HasIndex(x => x.NormalizedTitle);
+            book.HasIndex(x => new { x.NormalizedTitle, x.Id })
+                .HasDatabaseName("IX_Books_NormalizedTitle_Id");
             book.HasIndex(x => x.DuplicateKey).IsUnique();
             book.Property(x => x.PublicationDate).HasConversion(nullableDateOnlyConverter);
             book.Property(x => x.ReadingStatus).HasConversion<string>();

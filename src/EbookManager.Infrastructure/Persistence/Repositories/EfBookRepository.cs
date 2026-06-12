@@ -202,7 +202,7 @@ public sealed class EfBookRepository(
     private static IQueryable<BookListProjection> ListProjectionQuery(LibraryDbContext context) =>
         context.Books
             .AsNoTracking()
-            .OrderBy(x => x.Title)
+            .OrderBy(x => x.NormalizedTitle)
             .ThenBy(x => x.Id)
             .Select(x => new BookListProjection(
                 x.Id,
