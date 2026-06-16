@@ -98,7 +98,16 @@
           <Button Command="{Binding ShowDuplicateCandidatesCommand}"
                   Style="{StaticResource ToolbarIconButtonStyle}"
                   ToolTip="{loc:Loc DuplicateCandidatesTooltip}">
-            <Path Data="{StaticResource DuplicateCandidatesIconGeometry}" Fill="{DynamicResource AccentBrush}" Width="22" Height="22" Stretch="Uniform" />
+            <Path Data="{StaticResource DuplicateCandidatesIconGeometry}"
+                  Stroke="{DynamicResource AccentBrush}"
+                  StrokeThickness="2"
+                  StrokeStartLineCap="Round"
+                  StrokeEndLineCap="Round"
+                  StrokeLineJoin="Round"
+                  Fill="Transparent"
+                  Width="22"
+                  Height="22"
+                  Stretch="Uniform" />
           </Button>
           <Button Style="{StaticResource ToolbarIconButtonStyle}"
                   ToolTip="{loc:Loc OpenSettingsTooltip}"
