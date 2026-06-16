@@ -1,5 +1,6 @@
 using EbookManager.Presentation.ViewModels;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace EbookManager.App.Views;
 
@@ -16,13 +17,26 @@ public partial class DuplicateCandidatesWindow : System.Windows.Window
         Close();
     }
 
-    private void DuplicateRowsDoubleClicked(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void DuplicateRowDoubleClicked(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not DataGrid { SelectedItem: DuplicateCandidateRowViewModel row })
+        if (sender is DataGridRow { DataContext: DuplicateCandidateRowViewModel row })
         {
-            return;
+            e.Handled = true;
+            ShowDetails(row);
         }
+    }
 
+    private void ShowDetailsClicked(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: DuplicateCandidateRowViewModel row })
+        {
+            e.Handled = true;
+            ShowDetails(row);
+        }
+    }
+
+    private void ShowDetails(DuplicateCandidateRowViewModel row)
+    {
         var window = new DuplicateCandidateDetailsWindow(row)
         {
             Owner = this

@@ -64,13 +64,13 @@
       </TextBlock>
 
       <DataGrid ItemsSource="{Binding Source={StaticResource DuplicateRows}}"
+                x:Name="DuplicateRowsGrid"
                 AutoGenerateColumns="False"
                 IsReadOnly="True"
                 GridLinesVisibility="Horizontal"
                 HeadersVisibility="Column"
                 SelectionMode="Extended"
-                SelectionUnit="FullRow"
-                MouseDoubleClick="DuplicateRowsDoubleClicked">
+                SelectionUnit="FullRow">
         <DataGrid.Style>
           <Style TargetType="DataGrid">
             <Setter Property="Visibility" Value="Visible" />
@@ -108,6 +108,11 @@
             </GroupStyle.ContainerStyle>
           </GroupStyle>
         </DataGrid.GroupStyle>
+        <DataGrid.RowStyle>
+          <Style TargetType="DataGridRow">
+            <EventSetter Event="MouseDoubleClick" Handler="DuplicateRowDoubleClicked" />
+          </Style>
+        </DataGrid.RowStyle>
         <DataGrid.Columns>
           <DataGridTemplateColumn Header="{loc:Loc Cover}" Width="74">
             <DataGridTemplateColumn.CellTemplate>
@@ -129,6 +134,15 @@
           <DataGridTextColumn Header="{loc:Loc Series}" Binding="{Binding Series}" Width="1.4*" />
           <DataGridTextColumn Header="{loc:Loc Language}" Binding="{Binding Language}" Width="90" />
           <DataGridTextColumn Header="{loc:Loc Status}" Binding="{Binding Status}" Width="110" />
+          <DataGridTemplateColumn Header="{loc:Loc Details}" Width="90">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <Button Content="{loc:Loc Details}"
+                        Padding="8,2"
+                        Click="ShowDetailsClicked" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
         </DataGrid.Columns>
       </DataGrid>
     </Grid>
